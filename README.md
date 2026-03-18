@@ -21,11 +21,11 @@ ODD Studio is the companion tool to **The ODD Way to Build Software with Agentic
 ## Install
 
 ```bash
-npx odd-studio init my-project   # one-command setup                                                                     
+npx odd-studio init my-project                                                                    
 ```
 or 
 ```bash                                                                   
-npm install -g odd-studio        # global install 
+npm install -g odd-studio 
 ```
 That's it. This single command:
 
