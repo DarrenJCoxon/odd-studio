@@ -14,7 +14,7 @@ You don't need to write code. You need to understand your domain. That's the ski
 
 > *"The AI is the most capable junior engineer who ever lived. It can build anything you describe. It will build exactly what you describe. It will not tell you that what you described is the wrong thing to build. That judgement remains entirely yours."*
 
-ODD Studio is the companion tool to **The ODD Way to Build Software with Agentic AI** — the book that teaches Outcome-Driven Development from first principles. Every step in the tool references the relevant chapter. You'll understand the method as you use it, not just follow instructions.
+ODD Studio is the companion tool to **The ODD Way to Build Software with Agentic AI** — the book that teaches Outcome-Driven Development from first principles (book currently in development). Every step in the tool references the relevant chapter. You'll understand the method as you use it, not just follow instructions.
 
 ---
 
