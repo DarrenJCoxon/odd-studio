@@ -1,0 +1,6 @@
+# Development / repo files — not shipped in the npm package
+.git/
+.gitignore
+*.log
+
+# Keep everything else — skill/, hooks/, templates/, bin/, scripts/ all ship

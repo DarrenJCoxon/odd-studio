@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "projectName": "{{PROJECT_NAME}}",
+  "initialisedAt": null,
+  "lastSaved": null,
+  "lastCommit": null,
+  "planningPhase": "not-started",
+  "currentStep": null,
+  "personas": [],
+  "outcomes": [],
+  "contractsMapped": false,
+  "planApproved": false,
+  "sessionBriefExported": false,
+  "buildPhase": null,
+  "notes": ""
+}
