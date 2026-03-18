@@ -21,7 +21,8 @@ ODD Studio is the companion tool to **The ODD Way to Build Software with Agentic
 ## Install
 
 ```bash
-npx odd-studio init my-project
+npx odd-studio init my-project   # one-command setup                                                                     
+npm install -g odd-studio        # global install 
 ```
 
 That's it. This single command:
