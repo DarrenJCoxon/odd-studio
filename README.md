@@ -212,7 +212,7 @@ These are the skills that make you effective at building with AI — permanently
 
 ## The book
 
-ODD Studio implements the methodology from **[Book Title]**. Each step in the tool references the chapter that explains the underlying principle. The book and the tool are the same learning experience — you can start with either.
+ODD Studio implements the methodology from **Software Development the ODD Way** (Book in development). Each step in the tool references the chapter that explains the underlying principle. The book and the tool are the same learning experience — you can start with either.
 
 ---
 
