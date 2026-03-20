@@ -20,10 +20,12 @@ ODD Studio is the companion tool to **The ODD Way to Build Software with Agentic
 
 ## Install
 
+Install inside the project folder to ensure you have the latest version
+
 ```bash
-npx odd-studio init my-project                                                                    
+npx odd-studio init                                                                    
 ```
-or 
+or globally (needs to be rerun on updates)
 ```bash                                                                   
 npm install -g odd-studio 
 ```
