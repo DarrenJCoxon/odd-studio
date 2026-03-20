@@ -114,13 +114,15 @@ Always announce which stage you are routing to and why before loading the sub-do
 
 ### `*build`
 
-Enter build mode. This command:
+Enter build mode. This command runs the following checks in order before beginning:
 
 1. Checks that `planApproved` is true in `.odd/state.json`. If not, explain that the plan must be approved before building, and offer `*plan` to complete it.
-2. Loads `docs/build/build-protocol.md` into context.
-3. Initialises the ruflo swarm (see Ruflo Swarm Initialisation below).
-4. Confirms to the user which phase is being worked on and which outcomes are in scope.
-5. Begins executing the Build Protocol for the current phase.
+2. Checks that `techStackDecided` is true. If not, explain that the technical architecture decision must be made first, and route to `*phase-plan` to complete it with Rachel.
+3. Checks that `servicesConfigured` is true. If not, run the **Project Setup Protocol** below before proceeding.
+4. Loads `docs/build/build-protocol.md` into context.
+5. Initialises the ruflo swarm (see Ruflo Swarm Initialisation below).
+6. Confirms to the user which phase is being worked on and which outcomes are in scope.
+7. Begins executing the Build Protocol for the current phase.
 
 ---
 
@@ -367,10 +369,105 @@ All outcomes must be written and reviewed before contract mapping begins. If a u
 Contracts must be mapped before the Master Implementation Plan can be created. If a user attempts `*phase-plan` without mapped contracts, explain: "The implementation plan is built from the dependency graph, which comes from your contracts. Without the contract map, we cannot know which outcomes depend on which — and the plan will be in the wrong order."
 
 **Step 4 — Master Implementation Plan**
-The plan must be approved before build mode can be entered. If a user attempts `*build` without an approved plan, explain: "Build mode works from the Master Implementation Plan. Without an approved plan, the build agents have no verified sequence to follow — and will make assumptions that contradict your domain requirements."
+The plan must be approved before the technical architecture conversation can happen. If a user attempts `*build` without an approved plan, explain: "Build mode works from the Master Implementation Plan. Without an approved plan, the build agents have no verified sequence to follow — and will make assumptions that contradict your domain requirements."
 
-**Step 5 — Session Brief**
+**Step 5 — Technical Architecture**
+The technical stack must be decided and recorded before the project can be set up. `techStackDecided` must be true before `*build` proceeds. If not, route back to Rachel in `*phase-plan` to complete Step 9. The stack decision determines what gets scaffolded and which services need accounts.
+
+**Step 6 — Project Setup**
+The project must be scaffolded, service accounts created, `.env.local` populated, and the development server running before the build begins. `servicesConfigured` must be true before the ruflo swarm initialises. If not, run the Project Setup Protocol automatically.
+
+**Step 7 — Session Brief**
 Recommend `*export` before starting any build session. The Session Brief is the primary input for the build agents.
+
+---
+
+## Project Setup Protocol
+
+Run this when `*build` is called and `servicesConfigured` is false. This sequence connects the chosen services and gets the development server running before the build starts.
+
+### 1. Scaffold the project
+
+Based on `techStack` in `.odd/state.json` and the full decision from ruflo key `odd-tech-stack`, scaffold the project. For a Next.js stack:
+
+```bash
+npx create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias "@/*"
+npm install drizzle-orm drizzle-kit vitest @testing-library/react @vitejs/plugin-react
+```
+
+Confirm to the user: "Project scaffolded with [stack]. Drizzle (your database layer — keeps the AI honest about your data) and Vitest (automated business rule testing) are installed."
+
+### 2. Generate .env.local template
+
+Based on the services in the architecture decision, write a `.env.local` file to the project root with placeholder values and a comment on each line explaining where to find the real value:
+
+```
+# Supabase — supabase.com > your project > Settings > API
+DATABASE_URL=your-supabase-connection-string-here
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url-here
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key-here
+
+# Stripe — stripe.com > Developers > API Keys (use TEST keys during development)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your-key-here
+STRIPE_SECRET_KEY=sk_test_your-key-here
+STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret-here
+
+# Resend — resend.com > API Keys
+RESEND_API_KEY=your-resend-api-key-here
+```
+
+Display to the user:
+
+---
+
+I have generated a `.env.local` file in your project folder. It contains a placeholder for every credential your project needs.
+
+**Your next step:** Create accounts with each of these services and paste in your credentials.
+
+[For each service in the stack, list: service name, what to do, exactly where to find the credential in the dashboard]
+
+A few important rules:
+- Use **test keys** for payment services — test keys begin with `pk_test_` or `sk_test_` and cannot charge real cards
+- Never paste credentials into a chat or message — if you need to share access with someone, add them directly to the service account
+- Never commit `.env.local` to git — ODD Studio checks for this automatically
+
+Come back when you have filled in all the values. I will verify the connections before we start building.
+
+---
+
+### 3. Wait for confirmation
+
+Display: "Let me know when you have filled in all the credentials in `.env.local`."
+
+When the user confirms, proceed to step 4.
+
+### 4. Verify connections
+
+Start the development server: `npm run dev`. Monitor output for connection errors. If errors appear, translate each one into plain language and tell the user which credential to recheck. Wait for the user to fix it and confirm again. Repeat until the server starts cleanly.
+
+Common errors and plain-language translations:
+- `invalid input syntax for type uuid` or `password authentication failed` → "The database connection string in DATABASE_URL does not look right. Check that you copied the full string from Supabase > Settings > Database, including the password."
+- `No such file or directory` for env file → "The .env.local file could not be found. Make sure it is in the root of your project folder, not inside a subfolder."
+- `Invalid API Key` from Stripe → "The Stripe key does not appear to be valid. Confirm you are using a test key (it should start with `pk_test_` or `sk_test_`) and that it was copied in full."
+
+### 5. Mark configured
+
+When the server starts without errors:
+
+Update `.odd/state.json`: set `servicesConfigured: true`.
+
+Display:
+
+---
+
+All services connected. The development server is running at `http://localhost:3000`.
+
+Phase A is ready to begin. ODD Studio will now build the authentication system and data foundation — the invisible infrastructure everything else depends on.
+
+---
+
+Continue to the ruflo swarm initialisation and the build protocol.
 
 ---
 
@@ -477,8 +574,14 @@ At key moments in the methodology, proactively explain why the current step matt
 **All outcomes approved:**
 "All outcomes have passed the quality review. You have documented the full behaviour of your system in plain language, without a single line of code. This is the most valuable planning artefact in the project."
 
+**Technical stack agreed:**
+"The stack is recorded in CLAUDE.md and project memory. Every build agent will read this before writing a line of code. Drizzle is your database layer — the AI will always know exactly what is in your data. Vitest is your testing layer — business rules are checked automatically every time something is built. Type *build to scaffold the project and connect your services."
+
+**Services configured:**
+"All services are connected and the development server is running. This is the first time your project has come to life. Phase A is about to build the authentication system and data foundation — the invisible infrastructure that everything else depends on. Nothing will be visible in the browser until Phase A is complete. That is correct."
+
 **Plan signed off:**
-"The Master Implementation Plan is approved. You have a sequenced, dependency-respecting build order, anchored to real personas and verified outcomes. This is the document that turns a vision into an executable build. You are ready."
+"The Master Implementation Plan is approved. You have a sequenced, dependency-respecting build order, anchored to real personas and verified outcomes. This is the document that turns a vision into an executable build. The technical architecture conversation is next — Rachel will read everything you have documented and recommend the right stack for your specific project."
 
 **Checkpoint clear (first time):**
 "Checkpoint runs automatically every time you confirm an outcome. It scans what was just built for security issues — exposed secrets, missing authentication checks, injection vulnerabilities — and briefs the build agent to fix anything it finds before you move on. You do not need to understand what it found or how it was fixed. Security is not a separate concern in ODD Studio. It is built into the rhythm of the build."
@@ -538,6 +641,11 @@ planApproved: boolean
 planPhases: array of phase names
 currentBuildPhase: string
 lastVerifiedOutcome: string
+techStackDecided: boolean
+techStack: string (chosen framework, e.g. "Next.js")
+orm: string (always "Drizzle")
+testingFramework: string (always "Vitest")
+servicesConfigured: boolean
 ```
 
 ---
