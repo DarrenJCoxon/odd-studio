@@ -396,14 +396,21 @@ When the plan is complete, ask Claude Code: "Read all the outcomes and contracts
 
 ---
 
-## 16. The 4-Level Build Protocol
+## 16. The Build Protocol
 
 See `build/build-protocol.md` for the full protocol. Summary:
 
-- **Level 1 — Session Protocol**: Re-orient Claude Code at every session start. Restore Ruflo state. Write handover notes. Close sessions with commits and saved state.
-- **Level 2 — Phase Protocol**: Verify previous dependencies. Identify shared infrastructure. Run the Coordinator agent before parallel building. Run Integration Protocol after all outcomes complete.
-- **Level 3 — Outcome Protocol**: Brief Claude Code with all 6 fields. Run shape check before verification. Verify using the walkthrough as a literal test script. Describe failures in domain language. Re-verify the entire outcome after fixes. Commit when verified.
-- **Level 4 — Integration Protocol**: Handshake tests between connected outcomes. Data flow trace for primary entities. Cross-persona checks. Fix in domain language. Phase commit.
+ODD Studio handles all build mechanics. The domain expert follows a three-step session rhythm:
+
+1. **Type `/odd`** — ODD Studio reads the full project state from ruflo memory and reports exactly where the build stands. No re-briefing required.
+
+2. **Type `*build` or `*swarm`** — ODD Studio briefs the build AI with the full six-field specification, relevant contracts, and context from previous outcomes. The domain expert waits.
+
+3. **Verify** — Follow the verification checklist as the persona. Record each step: pass / fail / missing. Verify the failure paths, not just the happy path. Describe any failures in domain language — what the person sees, what should happen instead. Type `confirm` when all steps pass on a single complete run.
+
+After all outcomes in a phase are verified, ODD Studio runs the Integration Protocol automatically: handshake check, data flow trace, and cross-persona check. The domain expert confirms each. The phase is committed.
+
+**The domain expert never re-briefs the AI, tracks state manually, writes handover notes, or identifies shared infrastructure.** ODD Studio and ruflo memory handle all of that.
 
 ---
 
@@ -433,30 +440,29 @@ The dependency graph tells you the build order. If you build Outcome 12 before O
 
 ---
 
-## 18. The Hand-Off to Claude Code
+## 18. The Domain Expert's Role in the Build
 
-When your ODD plan is complete and the Build Protocol is running, your relationship with Claude Code is that of a domain expert briefing an implementation team. You know what the system must do. Claude Code knows how to build it.
+When the ODD plan is approved and the build begins, the domain expert's role is clear: verify that what was built is right for real users, and describe failures in plain language.
 
-The quality of the build depends on the quality of the brief.
+ODD Studio handles the brief. When the domain expert types `*build`, ODD Studio reads the six-field specification from ruflo memory and briefs the build AI with everything it needs. The domain expert does not paste context, identify contracts, or re-explain the project.
 
-**A complete brief for an outcome includes:**
-1. All 6 fields from the outcome document — pasted verbatim, not summarised
-2. The stack to use (Next.js, TypeScript, Tailwind CSS v4, shadcn/ui, Framer Motion, PostgreSQL/Prisma, NextAuth.js, Stripe where applicable, Resend for email)
-3. The domain language to use for files, variables, and components
-4. The verification walkthrough to treat as a test script
-5. Any rules from CLAUDE.md that are relevant
+**What the domain expert does:**
+- Follow the verification checklist as the persona — not as themselves reviewing a screen
+- Verify the failure paths, not just the happy path
+- Describe failures in domain language: what the person sees, what should happen instead
+- Type `confirm` when all steps pass
 
-**What you do not tell Claude Code:**
-- How to implement it (that is Claude Code's job)
-- What files to create (Claude Code decides, based on the stack and the requirement)
-- What the database schema should look like (Claude Code derives this from the contracts)
+**What the domain expert does not do:**
+- Brief the AI with technical stack details (ODD Studio handles this)
+- Identify what files need changing (Claude Code decides)
+- Describe fixes in technical terms (describe the domain experience; Claude Code finds the cause)
 
-**What to do when the build does not match the brief:**
+**Describing failures correctly:**
 
-Describe the discrepancy in domain language. "The application detail panel should show the student's teacher reference, but I can see the personal statement twice and the teacher reference is missing." Then ask Claude Code to re-read the outcome document and correct the discrepancy.
+Not: "The API is returning a 500 error." That is a technical description that requires knowing what an API error means.
 
-Do not attempt to describe the fix in technical terms. You do not know whether the problem is in the database query, the API route, or the UI component. Claude Code does. Your job is to describe what is wrong from the user's perspective — Claude Code's job is to find and fix the cause.
+Instead: "When I try to book an event, the page shows a generic error message. It does not tell me what went wrong or what to do next." That tells the AI what the person experiences and what should happen instead.
 
 **The final test of a complete system:**
 
-Run the acid-test persona. Log in as the person at the edge of your user base — the newly-hired teacher, the partially-completed application, the admin covering for someone on leave. If the system handles their experience correctly, it is almost certainly handling everyone else's correctly too.
+Run the acid-test persona. Verify the experience of the person at the edge of the user base — the first-time visitor, the customer whose payment is declined, the organiser who has no events yet. If the system handles their experience correctly, it is almost certainly handling everyone else's correctly too.

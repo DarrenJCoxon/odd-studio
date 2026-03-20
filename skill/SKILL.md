@@ -176,7 +176,75 @@ Initialise the ruflo swarm for parallel build execution. See the full Ruflo Swar
 
 ---
 
-### `*export`
+### `*agent`
+
+Create a custom agent for a domain-specific concern. The domain expert describes what they need in plain language. ODD Studio configures the agent, assigns it to the swarm, and includes its reports in the verification output alongside the QA agent's report.
+
+Common use cases: brand voice (flag text that does not match the platform's tone), compliance (check every outcome against a regulatory standard), accessibility (review every screen against WCAG).
+
+The domain expert does not write agent code. They describe the concern:
+
+> "Every piece of text a customer sees should sound like it comes from a small, friendly independent bookshop. Flag anything that sounds corporate or uses jargon."
+
+ODD Studio creates the agent from that description. It runs on every relevant outcome and reports in domain language.
+
+After collecting the description, call `mcp__ruflo__agent_spawn` with the custom role and the domain expert's description as instructions. Confirm the agent is active and will run during the next `*build` or `*swarm` session.
+
+---
+
+### `confirm`
+
+The domain expert types `confirm` when all verification steps for the current outcome have passed on a single complete run.
+
+Execute the following steps in order:
+
+**1. Run Checkpoint.**
+
+Execute via Bash: `npx @darrenjcoxon/vibeguard --security-only -o json 2>/dev/null`
+
+Display to the domain expert: "Checkpoint running..."
+
+Parse the JSON output. Look for findings with severity `critical`, `high`, or `secret`.
+
+**If Checkpoint is not installed** (command fails or returns an error): skip silently and display "Checkpoint not installed — type `npx @darrenjcoxon/vibeguard --install-tools` in your terminal to enable security scanning." Then proceed to step 3.
+
+**2. If Checkpoint finds critical, high, or secret findings:**
+
+Do NOT advance to the next outcome.
+
+Translate each finding from technical language to a plain-language fix instruction. Do not show raw scanner output to the domain expert.
+
+Brief the build agent directly with the fix instructions. Do not ask the domain expert to review them.
+
+Display: "Checkpoint found [N] security issue(s) in this outcome. The build agent is fixing them now. This does not affect your verification — the outcome behaves correctly. Once the security fix is complete, Checkpoint will run again automatically."
+
+After the build agent applies fixes, re-run Checkpoint automatically (repeat step 1). Repeat until Checkpoint is clear. Then proceed to step 3.
+
+**3. If Checkpoint is clear:**
+
+Display: "Checkpoint clear."
+
+Commit the verified state via git with message: `feat: verified [outcome name] — [phase]`
+
+Call `mcp__ruflo__memory_store` key `odd-outcome-[name]` with status `verified`, namespace `odd-project`.
+
+Update `.odd/state.json`: mark outcome as verified, set `nextStep` to the next outcome in the phase.
+
+Display:
+
+---
+
+**[Outcome name] — verified and committed.**
+
+Checkpoint: clear.
+
+**Next:** [next outcome name and one-sentence description]
+
+Type `*build` to begin, or `*status` to see the full phase progress.
+
+---
+
+---
 
 Generate the IDE Session Brief. This is a standalone document that a developer or AI coding agent can use to execute a build session without needing to ask planning questions.
 
@@ -199,16 +267,24 @@ After writing the file, display: "Your Session Brief has been written to docs/se
 Load coaching content from chapter n of the ODD methodology book. Route to the appropriate file in `docs/chapters/`. If the chapter file does not exist, explain what that chapter covers conceptually and offer to explore it through dialogue.
 
 Chapter reference:
-- Chapter 1: Why features fail and outcomes succeed
-- Chapter 2: Persona depth — beyond demographics
-- Chapter 3: Writing outcomes that actually specify behaviour
-- Chapter 4: The walkthrough as specification
-- Chapter 5: Contracts — the grammar of system connections
-- Chapter 6: The Master Implementation Plan
-- Chapter 7: Build Protocol — how AI agents work from your plan
-- Chapter 8: Verification in the domain expert's language
-- Chapter 9: UI excellence for non-designers
-- Chapter 10: Handling change without breaking the plan
+- Chapter 1: It's All About Clarity
+- Chapter 2: The Right Division of Labour
+- Chapter 3: Features Aren't Enough
+- Chapter 4: Outcomes Should Be Specific
+- Chapter 5: Personas Are Load-Bearing
+- Chapter 6: Every Outcome Has a Contract
+- Chapter 7: Design the Outcome Twice
+- Chapter 8: The Master Implementation Plan
+- Chapter 9: Start from Zero
+- Chapter 10: The Build Protocol
+- Chapter 11: Verification Is Your Job
+- Chapter 12: Building One Outcome
+- Chapter 13: Concurrent Outcomes and the Swarm
+- Chapter 14: The Things That Scare You
+- Chapter 15: Good Interfaces Are Specified, Not Designed
+- Chapter 16: Managing Change
+- Chapter 17: The Swarm in Depth
+- Chapter 18: Conclusion
 
 ---
 
@@ -245,7 +321,8 @@ Display this reference:
 | `*contracts` | Map contracts with Theo |
 | `*phase-plan` | Build the Master Implementation Plan with Rachel |
 | `*ui` | Load UI excellence principles |
-| `*swarm` | Initialise ruflo swarm manually |
+| `*swarm` | Build all independent outcomes in the current phase simultaneously |
+| `*agent` | Create a custom agent for a domain-specific concern |
 | `*export` | Generate IDE Session Brief |
 | `*chapter [n]` | Load methodology coaching for chapter n |
 | `*why` | Explain why the current step matters |
@@ -403,8 +480,11 @@ At key moments in the methodology, proactively explain why the current step matt
 **Plan signed off:**
 "The Master Implementation Plan is approved. You have a sequenced, dependency-respecting build order, anchored to real personas and verified outcomes. This is the document that turns a vision into an executable build. You are ready."
 
+**Checkpoint clear (first time):**
+"Checkpoint runs automatically every time you confirm an outcome. It scans what was just built for security issues — exposed secrets, missing authentication checks, injection vulnerabilities — and briefs the build agent to fix anything it finds before you move on. You do not need to understand what it found or how it was fixed. Security is not a separate concern in ODD Studio. It is built into the rhythm of the build."
+
 **Phase complete:**
-"Phase complete. All outcomes in this phase have been verified. The contracts they exposed are now available to the next phase. Well done — this is exactly how a well-planned build should progress."
+"Phase complete. All outcomes in this phase have been verified and cleared by Checkpoint. The contracts they exposed are now available to the next phase. Well done — this is exactly how a well-planned build should progress."
 
 ---
 

@@ -62,7 +62,7 @@ program
     console.log(chalk.bold(`  Setting up: ${chalk.cyan(resolvedName)}\n`));
 
     // 1. Scaffold project structure
-    print.step(1, 3, 'Creating project structure...');
+    print.step(1, 5, 'Creating project structure...');
     const spinner1 = ora({ text: '', indent: 4 }).start();
     try {
       await scaffoldProject(targetDir, resolvedName);
@@ -76,7 +76,7 @@ program
 
     // 2. Install /odd skill
     if (!options.skipSkill) {
-      print.step(2, 3, 'Installing /odd skill into Claude Code...');
+      print.step(2, 5, 'Installing /odd skill into Claude Code...');
       const spinner2 = ora({ text: '', indent: 4 }).start();
       try {
         const result = await installSkill(PACKAGE_ROOT);
@@ -88,13 +88,13 @@ program
         print.info('Manual install: copy ' + chalk.dim('skill/') + ' to ' + chalk.dim('~/.claude/skills/odd/'));
       }
     } else {
-      print.step(2, 3, 'Skipping skill install (--skip-skill)');
+      print.step(2, 5, 'Skipping skill install (--skip-skill)');
       print.warn('Remember to install the skill manually for /odd to work in Claude Code.');
     }
 
     // 3. Setup hooks
     if (!options.skipHooks) {
-      print.step(3, 3, 'Installing safety hooks into Claude Code settings...');
+      print.step(3, 5, 'Installing safety hooks into Claude Code settings...');
       const spinner3 = ora({ text: '', indent: 4 }).start();
       try {
         const result = await setupHooks(PACKAGE_ROOT);
@@ -106,8 +106,41 @@ program
         print.info('Manual install: add entries from ' + chalk.dim('hooks/') + ' to ~/.claude/settings.json');
       }
     } else {
-      print.step(3, 3, 'Skipping hooks (--skip-hooks)');
+      print.step(3, 5, 'Skipping hooks (--skip-hooks)');
       print.warn('Safety hooks not installed. Git guardrails and quality gates will not run.');
+    }
+
+    // 4. Install Checkpoint security scanning tools
+    print.step(4, 5, 'Installing Checkpoint security scanning tools...');
+    const spinner4a = ora({ text: '', indent: 4 }).start();
+    try {
+      const { execSync } = await import('child_process');
+      execSync('npx @darrenjcoxon/vibeguard --install-tools --quiet 2>/dev/null', { stdio: 'ignore', timeout: 60000 });
+      spinner4a.stop();
+      print.ok('Checkpoint security tools installed');
+    } catch (e) {
+      spinner4a.stop();
+      print.warn('Checkpoint tools could not be installed automatically');
+      print.info('Run: npx @darrenjcoxon/vibeguard --install-tools  to enable security scanning');
+    }
+
+    // 5. Configure ruflo MCP server (cross-session memory)
+    print.step(5, 5, 'Configuring ruflo memory server...');
+    const spinner5 = ora({ text: '', indent: 4 }).start();
+    try {
+      const { default: setupMcp } = await import('../scripts/setup-mcp.js');
+      const mcpResult = await setupMcp();
+      spinner5.stop();
+      if (mcpResult.mcpJsonUpdated || mcpResult.settingsUpdated) {
+        print.ok('Ruflo MCP server configured — cross-session memory enabled');
+      } else {
+        print.ok('Ruflo MCP server already configured');
+      }
+    } catch (e) {
+      spinner5.stop();
+      print.warn('Could not configure ruflo automatically: ' + e.message);
+      print.info('Manual setup: add ruflo to ~/.mcp.json and enable in ~/.claude/settings.json');
+      print.info('See: https://github.com/ruvnet/ruflo for installation instructions');
     }
 
     // ── Done ──
@@ -119,8 +152,9 @@ program
     if (projectName) {
       console.log('  1. ' + chalk.cyan(`cd ${projectName}`));
     }
-    console.log('  ' + (projectName ? '2' : '1') + '. Open Claude Code: ' + chalk.cyan('claude .'));
-    console.log('  ' + (projectName ? '3' : '2') + '. Start your ODD session: ' + chalk.cyan('/odd'));
+    console.log('  ' + (projectName ? '2' : '1') + '. Restart Claude Code: ' + chalk.cyan('quit and reopen') + chalk.dim(' (activates ruflo memory + hooks)'));
+    console.log('  ' + (projectName ? '3' : '2') + '. Open your project: ' + chalk.cyan('claude .'));
+    console.log('  ' + (projectName ? '4' : '3') + '. Start your ODD session: ' + chalk.cyan('/odd'));
     print.blank();
 
     console.log(chalk.dim('  ODD Studio implements Outcome-Driven Development.'));
@@ -186,6 +220,15 @@ program
       s2.succeed('Hooks updated');
     } catch (e) {
       s2.fail('Hooks update failed: ' + e.message);
+    }
+
+    const s3 = ora({ text: 'Checking ruflo MCP configuration...', indent: 4 }).start();
+    try {
+      const { default: setupMcp } = await import('../scripts/setup-mcp.js');
+      const mcpResult = await setupMcp();
+      s3.succeed(mcpResult.mcpJsonUpdated || mcpResult.settingsUpdated ? 'Ruflo MCP configured' : 'Ruflo MCP already configured');
+    } catch (e) {
+      s3.fail('Ruflo MCP check failed: ' + e.message);
     }
 
     print.blank();

@@ -13,16 +13,20 @@ if (!isGlobal && !isNpx) {
   process.exit(0);
 }
 
-import('./install-skill.js')
-  .then(({ default: installSkill }) => {
-    const pkg = new URL('..', import.meta.url).pathname;
-    return installSkill(pkg.replace(/\/$/, ''));
-  })
+const pkg = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
+
+Promise.all([
+  import('./install-skill.js').then(({ default: installSkill }) => installSkill(pkg)),
+  import('./setup-hooks.js').then(({ default: setupHooks }) => setupHooks(pkg)),
+  import('./setup-mcp.js').then(({ default: setupMcp }) => setupMcp()),
+])
   .then(() => {
-    console.log('✓ ODD Studio: /odd skill installed into Claude Code');
+    console.log('✓ ODD Studio: /odd skill, safety hooks, and ruflo memory installed into Claude Code');
+    console.log('  → Restart Claude Code now to activate ruflo memory and hooks.');
+    console.log('  Run: npx odd-studio init [project-name]  to scaffold your first project.');
   })
   .catch((e) => {
     // Non-fatal — user can run odd-studio init manually
-    console.log('⚠ ODD Studio: Could not auto-install skill (' + e.message + ')');
+    console.log('⚠ ODD Studio: Could not complete setup (' + e.message + ')');
     console.log('  Run: npx odd-studio init  to complete setup.');
   });
