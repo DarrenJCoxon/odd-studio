@@ -39,13 +39,7 @@ That's it. This single command:
 
 **Then:**
 
-```bash
-cd my-project
-claude .
-```
-
-Inside Claude Code, type:
-
+Inside your project folder in Claude Code, type:
 ```
 /odd
 ```
