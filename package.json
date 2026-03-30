@@ -1,6 +1,6 @@
 {
   "name": "odd-studio",
-  "version": "2.4.0",
+  "version": "2.14.0",
   "description": "Outcome-Driven Development for Claude Code — a planning and build harness for domain experts building serious software with AI.",
   "keywords": [
     "claude-code",
@@ -23,6 +23,7 @@
   },
   "type": "module",
   "files": [
+    "README.md",
     "bin/",
     "scripts/",
     "skill/",

@@ -44,6 +44,74 @@ const ODD_HOOKS = {
     timeout: 5,
     statusMessage: '🏗️ ODD build safety check...',
   },
+  'odd-code-elegance.sh': {
+    event: 'PostToolUse',
+    matcher: 'Write',
+    timeout: 5,
+    statusMessage: '✨ ODD code elegance check...',
+  },
+  'odd-brief-gate.sh': {
+    event: 'PreToolUse',
+    matcher: 'Agent',
+    timeout: 5,
+    statusMessage: '📋 ODD brief gate check...',
+  },
+  'odd-brief-quality.sh': {
+    event: 'PostToolUse',
+    matcher: 'Write',
+    timeout: 5,
+    statusMessage: '📋 ODD brief quality check...',
+  },
+  'odd-commit-gate.sh': {
+    event: 'PreToolUse',
+    matcher: 'Bash',
+    timeout: 5,
+    statusMessage: '🔒 ODD commit gate check...',
+  },
+  'odd-verify-gate.sh': {
+    event: 'PreToolUse',
+    matcher: 'Edit',
+    timeout: 5,
+    statusMessage: '✅ ODD verification gate...',
+  },
+  'odd-ruflo-build-gate.sh': {
+    event: 'PreToolUse',
+    matcher: 'Agent',
+    timeout: 5,
+    statusMessage: '🔗 ODD ruflo build gate...',
+  },
+  'odd-ruflo-confirm-gate.sh': {
+    event: 'PreToolUse',
+    matcher: 'Edit',
+    timeout: 5,
+    statusMessage: '🔗 ODD ruflo confirm gate...',
+  },
+  'odd-ruflo-confirm-gate-write.sh': {
+    event: 'PreToolUse',
+    matcher: 'Write',
+    timeout: 5,
+    statusMessage: '🔗 ODD ruflo confirm gate...',
+    _aliasOf: 'odd-ruflo-confirm-gate.sh',
+  },
+  'odd-scanner-cleanup.sh': {
+    event: 'PostToolUse',
+    matcher: 'Bash',
+    timeout: 10,
+    statusMessage: '🧹 ODD scanner cleanup...',
+  },
+  'odd-swarm-write-gate.sh': {
+    event: 'PreToolUse',
+    matcher: 'Write',
+    timeout: 5,
+    statusMessage: '🔒 ODD swarm write gate...',
+  },
+  'odd-swarm-write-gate-edit.sh': {
+    event: 'PreToolUse',
+    matcher: 'Edit',
+    timeout: 5,
+    statusMessage: '🔒 ODD swarm edit gate...',
+    _aliasOf: 'odd-swarm-write-gate.sh',
+  },
 };
 
 export default async function setupHooks(packageRoot, options = {}) {
@@ -52,11 +120,11 @@ export default async function setupHooks(packageRoot, options = {}) {
   // Copy hook scripts to ~/.claude/hooks/
   await fs.ensureDir(HOOKS_DEST);
   for (const hookFile of Object.keys(ODD_HOOKS)) {
-    const src = path.join(hooksSource, hookFile);
-    const dest = path.join(HOOKS_DEST, hookFile);
+    const sourceFile = ODD_HOOKS[hookFile]._aliasOf || hookFile;
+    const src = path.join(hooksSource, sourceFile);
+    const dest = path.join(HOOKS_DEST, sourceFile);
     if (fs.existsSync(src)) {
       await fs.copy(src, dest, { overwrite: true });
-      // Make executable
       await fs.chmod(dest, 0o755);
     }
   }
@@ -73,11 +141,12 @@ export default async function setupHooks(packageRoot, options = {}) {
   const hooksByEvent = {};
   for (const [hookFile, config] of Object.entries(ODD_HOOKS)) {
     const { event, matcher, timeout, statusMessage } = config;
+    const commandFile = config._aliasOf || hookFile;
     if (!hooksByEvent[event]) hooksByEvent[event] = {};
     if (!hooksByEvent[event][matcher]) hooksByEvent[event][matcher] = [];
     hooksByEvent[event][matcher].push({
       type: 'command',
-      command: path.join(HOOKS_DEST, hookFile),
+      command: path.join(HOOKS_DEST, commandFile),
       timeout,
       statusMessage,
     });
