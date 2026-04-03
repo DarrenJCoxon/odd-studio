@@ -112,6 +112,23 @@ const ODD_HOOKS = {
     statusMessage: '🔒 ODD swarm edit gate...',
     _aliasOf: 'odd-swarm-write-gate.sh',
   },
+  'odd-swarm-guard.sh': {
+    event: 'UserPromptSubmit',
+    timeout: 5,
+    statusMessage: '🔗 ODD swarm guard...',
+  },
+  'odd-commit-ruflo-gate.sh': {
+    event: 'PreToolUse',
+    matcher: 'Bash',
+    timeout: 5,
+    statusMessage: '🔒 ODD ruflo commit gate...',
+  },
+  'odd-ruflo-store-gate.sh': {
+    event: 'PostToolUse',
+    matcher: 'mcp__ruflo__memory_store',
+    timeout: 5,
+    statusMessage: '✅ ODD ruflo state ready...',
+  },
 };
 
 export default async function setupHooks(packageRoot, options = {}) {
@@ -137,14 +154,15 @@ export default async function setupHooks(packageRoot, options = {}) {
   }
   if (!settings.hooks) settings.hooks = {};
 
-  // Build hook entries
+  // Build hook entries — matcher is optional (UserPromptSubmit has none)
   const hooksByEvent = {};
   for (const [hookFile, config] of Object.entries(ODD_HOOKS)) {
     const { event, matcher, timeout, statusMessage } = config;
     const commandFile = config._aliasOf || hookFile;
+    const key = matcher ?? '__no_matcher__';
     if (!hooksByEvent[event]) hooksByEvent[event] = {};
-    if (!hooksByEvent[event][matcher]) hooksByEvent[event][matcher] = [];
-    hooksByEvent[event][matcher].push({
+    if (!hooksByEvent[event][key]) hooksByEvent[event][key] = [];
+    hooksByEvent[event][key].push({
       type: 'command',
       command: path.join(HOOKS_DEST, commandFile),
       timeout,
@@ -155,16 +173,16 @@ export default async function setupHooks(packageRoot, options = {}) {
   // Merge into existing hooks, tagged with odd-studio so we can upgrade cleanly
   for (const [event, matchers] of Object.entries(hooksByEvent)) {
     if (!settings.hooks[event]) settings.hooks[event] = [];
-    for (const [matcher, hookList] of Object.entries(matchers)) {
+    for (const [key, hookList] of Object.entries(matchers)) {
+      const hasMatcher = key !== '__no_matcher__';
       // Remove existing odd-studio hooks for this matcher (clean upgrade)
-      settings.hooks[event] = settings.hooks[event].filter(
-        (entry) => !(entry.matcher === matcher && entry._oddStudio)
-      );
-      settings.hooks[event].push({
-        matcher,
-        _oddStudio: true,
-        hooks: hookList,
+      settings.hooks[event] = settings.hooks[event].filter((entry) => {
+        if (!hasMatcher) return entry.matcher !== undefined || !entry._oddStudio;
+        return !(entry.matcher === key && entry._oddStudio);
       });
+      const entry = { _oddStudio: true, hooks: hookList };
+      if (hasMatcher) entry.matcher = key;
+      settings.hooks[event].push(entry);
     }
   }
 
