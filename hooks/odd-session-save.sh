@@ -39,24 +39,13 @@ node -e "
 # Refresh the ruflo sync marker so gate checks pass
 touch .odd/.ruflo-phase-synced 2>/dev/null
 
-# ── MANDATORY OUTPUT: Claude must act on this ─────────────────────────────────
+# ── SET DIRTY MARKER ──────────────────────────────────────────────────────────
+# This triggers odd-swarm-guard.sh to block EVERY subsequent turn with a loud
+# 🔴 warning until Claude calls mcp__ruflo__memory_store AND runs:
+#   rm -f .odd/.ruflo-state-dirty
 #
-# Claude Code injects PostToolUse hook stdout as a system-reminder.
-# This instruction is treated as coming from the user — it MUST be followed.
-#
-cat <<'INSTRUCTION'
-ODD PROTOCOL — MANDATORY RUFLO MEMORY WRITE
-
-A git commit just completed in an ODD Studio project. You MUST now immediately call
-mcp__ruflo__memory_store with:
-  key: "odd-project-state"
-  namespace: "odd-project"
-  upsert: true
-  value: the full current contents of .odd/state.json
-
-Read .odd/state.json right now and store it. Do not defer this. Do not skip it.
-This is not optional — without this write, the next session starts with stale state
-and the domain expert must re-brief from scratch.
-INSTRUCTION
+# This is the nuclear gate. A PostToolUse instruction output is not enough —
+# Claude can ignore text. A file on disk that the guard checks cannot be ignored.
+touch .odd/.ruflo-state-dirty 2>/dev/null
 
 exit 0
