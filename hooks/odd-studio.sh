@@ -452,8 +452,10 @@ store-validate)
 
   KEY=$(echo "$INPUT" | jq -r '.tool_input.key // empty')
 
-  SUCCESS=$(echo "$INPUT" | jq -r '.tool_response.success // false' 2>/dev/null || echo "false")
-  [ "$SUCCESS" = "true" ] || exit 0
+  # MCP responses may be nested under tool_response or at root — check both
+  if ! echo "$INPUT" | grep -qE '"success"[[:space:]]*:[[:space:]]*true'; then
+    exit 0
+  fi
 
   # Create the right marker based on what was stored
   case "$KEY" in
