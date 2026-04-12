@@ -1,15 +1,20 @@
 {
   "name": "odd-studio",
-  "version": "2.20.0",
-  "description": "Outcome-Driven Development for Claude Code — a planning and build harness for domain experts building serious software with AI.",
+  "version": "3.7.0",
+  "description": "Outcome-Driven Development for AI coding agents — a planning and build harness for domain experts building serious software with AI. Works with Claude Code, OpenCode, and Codex.",
   "keywords": [
     "claude-code",
+    "opencode",
+    "codex",
     "odd",
     "outcome-driven-development",
     "ai-development",
     "no-code",
     "claude",
-    "anthropic"
+    "anthropic",
+    "ollama",
+    "qwen",
+    "agentic-coding"
   ],
   "author": "ODD Studio",
   "license": "MIT",
@@ -19,7 +24,9 @@
   "scripts": {
     "prepare": "chmod +x bin/odd-studio.js hooks/*.sh",
     "prepublishOnly": "npm run prepare",
-    "postinstall": "node scripts/postinstall.js"
+    "postinstall": "node scripts/postinstall.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "type": "module",
   "files": [
@@ -28,6 +35,8 @@
     "scripts/",
     "skill/",
     "hooks/",
+    "plugins/",
+    "codex-plugin/",
     "templates/",
     ".claude-plugin/"
   ],
@@ -35,10 +44,13 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "commander": "^12.0.0",
     "chalk": "^5.3.0",
-    "ora": "^8.0.1",
+    "commander": "^12.0.0",
+    "fs-extra": "^11.2.0",
     "inquirer": "^10.0.0",
-    "fs-extra": "^11.2.0"
+    "ora": "^8.0.1"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.2"
   }
 }
