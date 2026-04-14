@@ -1,30 +1,37 @@
 'use strict';
 import fs from 'fs-extra';
 import path from 'path';
-import os from 'os';
 
 /**
- * Installs the /odd skill into ~/.claude/skills/odd/
- * Copies skill/ directory from the package root.
+ * Installs ODD Studio skills into <projectDir>/.claude/skills/.
+ *
+ * Everything stays project-local — nothing is written to ~/
+ *
+ * - skill/          -> <projectDir>/.claude/skills/odd/
+ * - skill/odd-X/    -> <projectDir>/.claude/skills/odd-X/
  */
-export default async function installSkill(packageRoot, options = {}) {
-  const source = path.join(packageRoot, 'skill');
-  const destination = path.join(os.homedir(), '.claude', 'skills', 'odd');
+export default async function installSkill(packageRoot, targetDir, options = {}) {
+  const skillDir = path.join(packageRoot, 'skill');
+  const skillsDest = path.join(targetDir, '.claude', 'skills');
 
-  if (!fs.existsSync(source)) {
-    throw new Error(`Skill source not found at ${source}`);
+  if (!fs.existsSync(skillDir)) {
+    throw new Error(`Skill source not found at ${skillDir}`);
   }
 
-  // Ensure ~/.claude/skills/ exists
-  await fs.ensureDir(path.join(os.homedir(), '.claude', 'skills'));
+  await fs.ensureDir(skillsDest);
 
-  // If destination exists and not forcing, back it up
-  if (fs.existsSync(destination) && !options.force) {
-    const backup = destination + '.backup-' + Date.now();
-    await fs.move(destination, backup);
+  const oddDest = path.join(skillsDest, 'odd');
+  await fs.ensureDir(oddDest);
+
+  const entries = await fs.readdir(skillDir, { withFileTypes: true });
+  for (const entry of entries) {
+    const src = path.join(skillDir, entry.name);
+    if (entry.isDirectory() && fs.existsSync(path.join(src, 'SKILL.md'))) {
+      await fs.copy(src, path.join(skillsDest, entry.name), { overwrite: true });
+    } else {
+      await fs.copy(src, path.join(oddDest, entry.name), { overwrite: true });
+    }
   }
 
-  await fs.copy(source, destination, { overwrite: true });
-
-  return { destination };
+  return { destination: skillsDest };
 }

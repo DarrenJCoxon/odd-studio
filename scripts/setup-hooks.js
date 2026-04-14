@@ -1,192 +1,186 @@
 'use strict';
 import fs from 'fs-extra';
 import path from 'path';
-import os from 'os';
+import { ODD_HOOK_FILE as HOOK_FILE } from './assets.js';
 
-const SETTINGS_PATH = path.join(os.homedir(), '.claude', 'settings.json');
-const HOOKS_DEST = path.join(os.homedir(), '.claude', 'hooks');
-
-// The hooks odd-studio installs, keyed by filename
-const ODD_HOOKS = {
-  'odd-git-safety.sh': {
-    event: 'PreToolUse',
-    matcher: 'Bash',
-    timeout: 5,
-    statusMessage: '🔒 ODD git safety check...',
-  },
-  'odd-destructive-guard.sh': {
-    event: 'PreToolUse',
-    matcher: 'Bash',
-    timeout: 5,
-    statusMessage: '🛡️ ODD destructive command guard...',
-  },
-  'odd-outcome-quality.sh': {
-    event: 'PostToolUse',
-    matcher: 'Write',
-    timeout: 5,
-    statusMessage: '🎯 ODD outcome quality check...',
-  },
-  'odd-ui-check.sh': {
-    event: 'PostToolUse',
-    matcher: 'Edit',
-    timeout: 3,
-    statusMessage: '🎨 ODD UI quality reminder...',
-  },
-  'odd-session-save.sh': {
-    event: 'PostToolUse',
-    matcher: 'Bash',
-    timeout: 10,
-    statusMessage: '💾 ODD session save...',
-  },
-  'odd-pre-build.sh': {
-    event: 'PreToolUse',
-    matcher: 'Bash',
-    timeout: 5,
-    statusMessage: '🏗️ ODD build safety check...',
-  },
-  'odd-code-elegance.sh': {
-    event: 'PostToolUse',
-    matcher: 'Write',
-    timeout: 5,
-    statusMessage: '✨ ODD code elegance check...',
-  },
-  'odd-brief-gate.sh': {
+// All ODD Studio gates, grouped by event + matcher.
+// Each entry becomes one hooks[] item in settings.json pointing to:
+//   odd-studio.sh <gate-name>
+//
+// Two-marker system (swarm-write gate):
+//   1. .odd/.odd-flow-swarm-active  — created by *build, 24h TTL (session marker)
+//   2. .odd/.odd-flow-agent-token    — created by Task agents, 120s TTL (write token)
+//
+// The orchestrator (main conversation) can read files and coordinate,
+// but CANNOT write source code. Only Task agents can write source code,
+// and only after creating the agent token. This prevents the LLM from
+// bypassing swarm coordination by editing files directly from the main
+// conversation.
+const GATES = [
+  // ── PreToolUse ──────────────────────────────────────────────────────────
+  {
     event: 'PreToolUse',
     matcher: 'Agent',
-    timeout: 5,
-    statusMessage: '📋 ODD brief gate check...',
+    gates: [
+      { name: 'brief-gate', timeout: 5, status: 'ODD brief gate...' },
+      { name: 'build-gate', timeout: 5, status: 'ODD build gate...' },
+    ],
   },
-  'odd-brief-quality.sh': {
-    event: 'PostToolUse',
+  {
+    event: 'PreToolUse',
     matcher: 'Write',
-    timeout: 5,
-    statusMessage: '📋 ODD brief quality check...',
+    gates: [
+      { name: 'swarm-write', timeout: 5, status: 'ODD swarm write gate...' },
+      { name: 'verify-gate', timeout: 5, status: 'ODD verification gate...' },
+      { name: 'confirm-gate', timeout: 5, status: 'ODD confirm gate...' },
+    ],
   },
-  'odd-commit-gate.sh': {
+  {
+    event: 'PreToolUse',
+    matcher: 'Edit',
+    gates: [
+      { name: 'swarm-write', timeout: 5, status: 'ODD swarm write gate...' },
+      { name: 'verify-gate', timeout: 5, status: 'ODD verification gate...' },
+      { name: 'confirm-gate', timeout: 5, status: 'ODD confirm gate...' },
+    ],
+  },
+  {
     event: 'PreToolUse',
     matcher: 'Bash',
-    timeout: 5,
-    statusMessage: '🔒 ODD commit gate check...',
+    gates: [
+      { name: 'checkpoint-gate', timeout: 5, status: 'ODD checkpoint gate...' },
+      { name: 'commit-gate', timeout: 5, status: 'ODD commit gate...' },
+    ],
   },
-  'odd-verify-gate.sh': {
-    event: 'PreToolUse',
-    matcher: 'Edit',
-    timeout: 5,
-    statusMessage: '✅ ODD verification gate...',
-  },
-  'odd-ruflo-build-gate.sh': {
-    event: 'PreToolUse',
-    matcher: 'Agent',
-    timeout: 5,
-    statusMessage: '🔗 ODD ruflo build gate...',
-  },
-  'odd-ruflo-confirm-gate.sh': {
-    event: 'PreToolUse',
-    matcher: 'Edit',
-    timeout: 5,
-    statusMessage: '🔗 ODD ruflo confirm gate...',
-  },
-  'odd-ruflo-confirm-gate-write.sh': {
-    event: 'PreToolUse',
-    matcher: 'Write',
-    timeout: 5,
-    statusMessage: '🔗 ODD ruflo confirm gate...',
-    _aliasOf: 'odd-ruflo-confirm-gate.sh',
-  },
-  'odd-scanner-cleanup.sh': {
-    event: 'PostToolUse',
-    matcher: 'Bash',
-    timeout: 10,
-    statusMessage: '🧹 ODD scanner cleanup...',
-  },
-  'odd-swarm-write-gate.sh': {
-    event: 'PreToolUse',
-    matcher: 'Write',
-    timeout: 5,
-    statusMessage: '🔒 ODD swarm write gate...',
-  },
-  'odd-swarm-write-gate-edit.sh': {
-    event: 'PreToolUse',
-    matcher: 'Edit',
-    timeout: 5,
-    statusMessage: '🔒 ODD swarm edit gate...',
-    _aliasOf: 'odd-swarm-write-gate.sh',
-  },
-  'odd-swarm-guard.sh': {
+  // ── UserPromptSubmit ────────────────────────────────────────────────────
+  {
     event: 'UserPromptSubmit',
-    timeout: 5,
-    statusMessage: '🔗 ODD swarm guard...',
+    matcher: null,
+    gates: [
+      { name: 'swarm-guard', timeout: 5, status: 'ODD swarm guard...' },
+    ],
   },
-  'odd-commit-ruflo-gate.sh': {
-    event: 'PreToolUse',
-    matcher: 'Bash',
-    timeout: 5,
-    statusMessage: '🔒 ODD ruflo commit gate...',
-  },
-  'odd-ruflo-store-gate.sh': {
+  // ── PostToolUse ─────────────────────────────────────────────────────────
+  {
     event: 'PostToolUse',
-    matcher: 'mcp__ruflo__memory_store',
-    timeout: 5,
-    statusMessage: '✅ ODD ruflo state ready...',
+    matcher: 'Write',
+    gates: [
+      { name: 'plan-complete-gate', timeout: 5, status: 'ODD plan complete gate...' },
+      { name: 'state-dirty-mark', timeout: 5, status: 'ODD state dirty mark...' },
+    ],
   },
-};
+  {
+    event: 'PostToolUse',
+    matcher: 'Edit',
+    gates: [
+      { name: 'plan-complete-gate', timeout: 5, status: 'ODD plan complete gate...' },
+      { name: 'state-dirty-mark', timeout: 5, status: 'ODD state dirty mark...' },
+    ],
+  },
+  {
+    event: 'PostToolUse',
+    matcher: 'Bash',
+    gates: [
+      { name: 'checkpoint-validate', timeout: 10, status: 'ODD checkpoint validate...' },
+      { name: 'session-save', timeout: 10, status: 'ODD session save...' },
+    ],
+  },
+  {
+    event: 'PostToolUse',
+    matcher: 'mcp__odd-flow__memory_store',
+    gates: [
+      { name: 'store-validate', timeout: 5, status: 'ODD store validate...' },
+    ],
+  },
+  {
+    event: 'PostToolUse',
+    matcher: 'mcp__odd-flow__coordination_sync',
+    gates: [
+      { name: 'sync-validate', timeout: 5, status: 'ODD sync validate...' },
+    ],
+  },
+  {
+    event: 'PostToolUse',
+    matcher: 'Write',
+    gates: [
+      { name: 'code-quality', timeout: 5, status: 'ODD code quality...' },
+      { name: 'security-quality', timeout: 5, status: 'ODD security quality...' },
+      { name: 'brief-quality', timeout: 5, status: 'ODD brief quality...' },
+      { name: 'outcome-quality', timeout: 5, status: 'ODD outcome quality...' },
+    ],
+  },
+  {
+    event: 'PostToolUse',
+    matcher: 'Edit',
+    gates: [
+      { name: 'code-quality', timeout: 5, status: 'ODD code quality...' },
+      { name: 'security-quality', timeout: 5, status: 'ODD security quality...' },
+    ],
+  },
+];
 
-export default async function setupHooks(packageRoot, options = {}) {
-  const hooksSource = path.join(packageRoot, 'hooks');
+export default async function setupHooks(packageRoot, targetDir, options = {}) {
+  const hookSource = path.join(packageRoot, 'hooks', HOOK_FILE);
+  const hooksDest = path.join(targetDir, '.claude', 'hooks');
+  const hookDest = path.join(hooksDest, HOOK_FILE);
+  const settingsPath = path.join(targetDir, '.claude', 'settings.local.json');
 
-  // Copy hook scripts to ~/.claude/hooks/
-  await fs.ensureDir(HOOKS_DEST);
-  for (const hookFile of Object.keys(ODD_HOOKS)) {
-    const sourceFile = ODD_HOOKS[hookFile]._aliasOf || hookFile;
-    const src = path.join(hooksSource, sourceFile);
-    const dest = path.join(HOOKS_DEST, sourceFile);
-    if (fs.existsSync(src)) {
-      await fs.copy(src, dest, { overwrite: true });
-      await fs.chmod(dest, 0o755);
-    }
+  // Step 1: Copy the single hook script
+  await fs.ensureDir(hooksDest);
+  if (fs.existsSync(hookSource)) {
+    await fs.copy(hookSource, hookDest, { overwrite: true });
+    await fs.chmod(hookDest, 0o755);
+  } else {
+    throw new Error(`Hook script not found: ${hookSource}`);
   }
 
-  // Read or initialise settings.json
-  await fs.ensureDir(path.dirname(SETTINGS_PATH));
+  // Step 2: Read or initialise project-local settings (backup existing first)
+  await fs.ensureDir(path.dirname(settingsPath));
   let settings = {};
-  if (fs.existsSync(SETTINGS_PATH)) {
-    settings = await fs.readJson(SETTINGS_PATH);
+  if (fs.existsSync(settingsPath)) {
+    const backupPath = settingsPath + '.bak';
+    await fs.copy(settingsPath, backupPath, { overwrite: true });
+    settings = await fs.readJson(settingsPath);
   }
   if (!settings.hooks) settings.hooks = {};
 
-  // Build hook entries — matcher is optional (UserPromptSubmit has none)
-  const hooksByEvent = {};
-  for (const [hookFile, config] of Object.entries(ODD_HOOKS)) {
-    const { event, matcher, timeout, statusMessage } = config;
-    const commandFile = config._aliasOf || hookFile;
-    const key = matcher ?? '__no_matcher__';
-    if (!hooksByEvent[event]) hooksByEvent[event] = {};
-    if (!hooksByEvent[event][key]) hooksByEvent[event][key] = [];
-    hooksByEvent[event][key].push({
-      type: 'command',
-      command: path.join(HOOKS_DEST, commandFile),
-      timeout,
-      statusMessage,
-    });
-  }
-
-  // Merge into existing hooks, tagged with odd-studio so we can upgrade cleanly
-  for (const [event, matchers] of Object.entries(hooksByEvent)) {
-    if (!settings.hooks[event]) settings.hooks[event] = [];
-    for (const [key, hookList] of Object.entries(matchers)) {
-      const hasMatcher = key !== '__no_matcher__';
-      // Remove existing odd-studio hooks for this matcher (clean upgrade)
-      settings.hooks[event] = settings.hooks[event].filter((entry) => {
-        if (!hasMatcher) return entry.matcher !== undefined || !entry._oddStudio;
-        return !(entry.matcher === key && entry._oddStudio);
-      });
-      const entry = { _oddStudio: true, hooks: hookList };
-      if (hasMatcher) entry.matcher = key;
-      settings.hooks[event].push(entry);
+  // Step 3: Remove all existing odd-studio hook entries (clean upgrade)
+  for (const event of Object.keys(settings.hooks)) {
+    if (Array.isArray(settings.hooks[event])) {
+      settings.hooks[event] = settings.hooks[event].filter(
+        (entry) => !entry._oddStudio
+      );
     }
   }
 
-  await fs.writeJson(SETTINGS_PATH, settings, { spaces: 2 });
+  // Step 4: Register all gates
+  for (const group of GATES) {
+    const { event, matcher, gates } = group;
+    if (!settings.hooks[event]) settings.hooks[event] = [];
 
-  return { hookCount: Object.keys(ODD_HOOKS).length };
+    const entry = {
+      _oddStudio: true,
+      hooks: gates.map((gate) => ({
+        type: 'command',
+        command: `.claude/hooks/${HOOK_FILE} ${gate.name}`,
+        timeout: gate.timeout,
+        statusMessage: gate.status,
+      })),
+    };
+    if (matcher) entry.matcher = matcher;
+
+    settings.hooks[event].push(entry);
+  }
+
+  // Step 5: Write project-local settings
+  await fs.writeJson(settingsPath, settings, { spaces: 2 });
+
+  // Count total gate registrations
+  const totalGates = GATES.reduce((sum, g) => sum + g.gates.length, 0);
+
+  return {
+    hookFile: HOOK_FILE,
+    hookCount: totalGates,
+    registrations: GATES.length,
+  };
 }

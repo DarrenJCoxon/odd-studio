@@ -1,6 +1,6 @@
 {
   "name": "odd-studio",
-  "version": "3.7.0",
+  "version": "3.7.1",
   "description": "Outcome-Driven Development for AI coding agents — a planning and build harness for domain experts building serious software with AI. Works with Claude Code, OpenCode, and Codex.",
   "keywords": [
     "claude-code",

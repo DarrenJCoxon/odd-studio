@@ -1,6 +1,6 @@
 # Chapter 17: The Swarm in Depth
 
-The ruflo swarm is the Build Protocol run in parallel by four specialised agents sharing a common specification. When the swarm produces wrong output, the cause is almost always a specification problem — incomplete contract map, vague walkthrough, ambiguous verification steps.
+The odd-flow swarm is the Build Protocol run in parallel by four specialised agents sharing a common specification. When the swarm produces wrong output, the cause is almost always a specification problem — incomplete contract map, vague walkthrough, ambiguous verification steps.
 
 This chapter is for when the swarm produced wrong output. The instinct is to blame the tool. In almost every case, the root cause is the specification, not the agents.
 

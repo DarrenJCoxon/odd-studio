@@ -17,6 +17,7 @@
 #
 #   PostToolUse (exit 0 + stderr = coaching):
 #     session-save     Bash     — auto-save state after git commit
+#     state-dirty-mark Write|Edit — marks state.json edits as needing odd-flow store
 #     store-validate   mcp__odd-flow__memory_store — creates ready marker
 #     sync-validate    mcp__odd-flow__coordination_sync — creates agents-ready marker
 #     code-quality     Write|Edit — code elegance check
@@ -444,6 +445,19 @@ plan-complete-gate)
   ;;
 
 # ─────────────────────────────────────────────────────────────────────────────
+# PostToolUse: Write|Edit state.json — mark dirty so swarm-guard nags until stored
+# ─────────────────────────────────────────────────────────────────────────────
+# This catches the gap between commit-triggered dirty marking and actual edits.
+# Any edit to state.json (by Claude or by another tool) sets the dirty marker.
+# It's cleared only when mcp__odd-flow__memory_store key=odd-project-state succeeds.
+state-dirty-mark)
+  [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ] || exit 0
+  echo "$FILE_PATH" | grep -q '\.odd/state\.json$' || exit 0
+  touch .odd/.odd-flow-state-dirty 2>/dev/null
+  exit 0
+  ;;
+
+# ─────────────────────────────────────────────────────────────────────────────
 # PostToolUse: mcp__odd-flow__memory_store — creates ready marker
 # ─────────────────────────────────────────────────────────────────────────────
 store-validate)
@@ -460,6 +474,28 @@ store-validate)
   # Create the right marker based on what was stored
   case "$KEY" in
     odd-project-state)
+      # Reject partial snapshots — the value MUST contain the full state.json shape.
+      # Without this, callers can store {currentBuildPhase: "X"} and silently drift.
+      VALUE=$(echo "$INPUT" | jq -c '.tool_input.value // empty' 2>/dev/null)
+      if [ -n "$VALUE" ] && [ "$VALUE" != "null" ] && [ "$VALUE" != "empty" ]; then
+        MISSING=$(echo "$VALUE" | jq -r '
+          [
+            (if has("personas") then empty else "personas" end),
+            (if has("outcomes") then empty else "outcomes" end),
+            (if has("currentBuildPhase") then empty else "currentBuildPhase" end),
+            (if has("currentPhase") then empty else "currentPhase" end)
+          ] | join(", ")
+        ' 2>/dev/null)
+        if [ -n "$MISSING" ]; then
+          echo "" >&2
+          echo "ODD STUDIO [store-validate]: Partial odd-project-state rejected." >&2
+          echo "Missing required keys: $MISSING" >&2
+          echo "Store the FULL contents of .odd/state.json, not a hand-built object." >&2
+          echo "" >&2
+          # Do NOT clear the dirty marker — the next store must include the full file
+          exit 0
+        fi
+      fi
       touch .odd/.odd-flow-state-ready 2>/dev/null
       rm -f .odd/.odd-flow-state-dirty 2>/dev/null
       ;;

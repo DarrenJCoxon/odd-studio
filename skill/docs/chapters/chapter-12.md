@@ -16,7 +16,7 @@ No new principles here. Everything has been introduced in earlier chapters. This
 
 **Step 5: Failure handling.** When you describe a failure, ODD Studio handles the fix. It re-reads the specification, makes the correction, and presents the checklist again. You verify again from the beginning — a partial re-verification does not count.
 
-**Step 6: confirm.** When every step passes, you type `confirm`. Before committing, ODD Studio runs Checkpoint — a security scan of what was just built. If Checkpoint finds anything, the build agent fixes it quietly and Checkpoint runs again. You see "Checkpoint clear" when it passes. ODD Studio then commits the verified outcome to git, updates ruflo with the new project state, and advances the plan to the next outcome. The cycle is complete.
+**Step 6: confirm.** When every step passes, you type `confirm`. Before committing, ODD Studio runs Checkpoint — a security scan of what was just built. If Checkpoint finds anything, the build agent fixes it quietly and Checkpoint runs again. You see "Checkpoint clear" when it passes. ODD Studio then commits the verified outcome to git, updates odd-flow with the new project state, and advances the plan to the next outcome. The cycle is complete.
 
 ## What You Do vs. What the Tool Does
 

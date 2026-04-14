@@ -49,7 +49,7 @@ The rule for when to use Framer Motion is in the component selection guide below
 ```
 User visits a page
   → Next.js App Router renders the page on the server
-  → Data from Prisma/PostgreSQL is fetched
+  → Data from Drizzle/PostgreSQL is fetched
   → Page is sent to browser as HTML
 
 User sees the page
@@ -320,9 +320,28 @@ Run this checklist after every UI outcome verification:
 
 ---
 
-## Outcome-to-Component Mapping Process
+## Layout Architecture (Defined in Step 9c, Enforced in Every Build)
 
-Before briefing Claude Code to build any UI outcome, run this mapping process. It takes 10 minutes and prevents hours of rework.
+Every project with more than 3 authenticated pages MUST define a layout architecture before the first line of UI code is written. This is not optional. Without it, build agents create isolated pages with ad-hoc navigation, and the platform feels like a disconnected collection of forms rather than a cohesive product.
+
+The layout architecture is defined during planning (Step 9c of the Build Planner) and recorded in CLAUDE.md. It specifies:
+
+1. **An app shell** — a shared layout component wrapping all authenticated pages, providing persistent navigation, header, and consistent content structure
+2. **A navigation structure** — sidebar, top bar, bottom tabs, or a combination. With specific items, icons, routes, and conditional visibility rules
+3. **A responsive breakpoint strategy** — what the layout does at desktop (1280px+), tablet (768px–1279px), and mobile (<768px)
+4. **A page relationship map** — how every outcome's screen connects to every other screen. No dead ends allowed — every page must be reachable within 2 taps using only the platform's navigation
+
+Build agents MUST read the layout architecture from CLAUDE.md before implementing any page. Every page renders inside the app shell. No page may render its own navigation. If a build agent creates a page that is a dead end or ignores the app shell, it fails design verification.
+
+**The app shell is the first thing built in Phase A** — before any outcome-specific page. It is part of the shared infrastructure, just like authentication and the database schema. All subsequent pages render inside it.
+
+---
+
+## Outcome-to-Component Mapping (Required Before Build)
+
+Before the session brief for each phase is generated, map every outcome's screens to specific components and layout patterns. This mapping is included IN the session brief — build agents read it before writing a line of code.
+
+This is not optional. Without it, build agents choose components ad-hoc, creating visual inconsistency across outcomes. The mapping takes 10 minutes per outcome and prevents hours of rework.
 
 **Step 1: Read the walkthrough and list every distinct screen.**
 

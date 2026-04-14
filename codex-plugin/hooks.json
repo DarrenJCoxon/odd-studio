@@ -1,0 +1,126 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh brief-gate"
+          },
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh build-gate"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh swarm-write"
+          },
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh verify-gate"
+          },
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh confirm-gate"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh checkpoint-gate"
+          },
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh commit-gate"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh swarm-guard"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh checkpoint-validate"
+          },
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh session-save"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__odd-flow__memory_store",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh store-validate"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__odd-flow__coordination_sync",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh sync-validate"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh code-quality"
+          },
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh security-quality"
+          },
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh brief-quality"
+          },
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh outcome-quality"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh code-quality"
+          },
+          {
+            "type": "command",
+            "command": "./hooks/odd-studio.sh security-quality"
+          }
+        ]
+      }
+    ]
+  }
+}

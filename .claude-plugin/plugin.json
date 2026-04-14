@@ -1,19 +1,35 @@
 {
   "name": "odd-studio",
   "description": "Outcome-Driven Development — a planning and build harness for domain experts building serious software with AI. Installs the /odd skill, safety hooks, and project scaffolding into Claude Code.",
-  "version": "1.0.0",
+  "version": "3.6.0",
   "author": {
     "name": "ODD Studio"
   },
   "skills": [
-    "odd"
+    "odd",
+    "odd-plan",
+    "odd-build",
+    "odd-debug",
+    "odd-swarm",
+    "odd-status",
+    "odd-deploy"
   ],
   "hooks": [
-    "odd-git-safety",
-    "odd-destructive-guard",
-    "odd-outcome-quality",
-    "odd-ui-check",
-    "odd-pre-build",
-    "odd-session-save"
+    "brief-gate",
+    "build-gate",
+    "swarm-write",
+    "verify-gate",
+    "confirm-gate",
+    "checkpoint-gate",
+    "commit-gate",
+    "session-save",
+    "store-validate",
+    "sync-validate",
+    "code-quality",
+    "security-quality",
+    "checkpoint-validate",
+    "brief-quality",
+    "outcome-quality",
+    "swarm-guard"
   ]
 }

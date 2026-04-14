@@ -282,11 +282,11 @@ Then ask: "Are there other outcomes to write? Or should we move to contract mapp
 
 ---
 
-## Ruflo Memory Storage
+## odd-flow Memory Storage
 
-After each outcome is approved, immediately store it in ruflo memory.
+After each outcome is approved, immediately store it in odd-flow memory.
 
-Call `mcp__ruflo__memory_store`:
+Call `mcp__odd-flow__memory_store`:
 - Key: `odd-outcome-[outcome-name-lowercase-hyphenated]`
 - Namespace: `odd-project`
 - Value: the full six-field outcome specification as a structured document
@@ -294,7 +294,7 @@ Call `mcp__ruflo__memory_store`:
 Confirm to the user: "Outcome saved to project memory."
 
 Then update `.odd/state.json`:
-- Add the outcome to the `outcomes` array with `approved: true`, `buildStatus: "not started"`, and `storedInRuflo: true`
+- Add the outcome to the `outcomes` array with `approved: true`, `buildStatus: "not started"`, and `storedInodd-flow: true`
 - Update `nextStep` to reflect whether more outcomes are needed or whether contract mapping is next
 
 ---

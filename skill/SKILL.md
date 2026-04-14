@@ -1,6 +1,6 @@
 ---
 name: "odd"
-version: "3.7.0"
+version: "3.7.1"
 description: "Outcome-Driven Development planning and build coach. Use /odd to start or resume an ODD project — building personas, writing outcomes, mapping contracts, creating a Master Implementation Plan, and directing a odd-flow-powered build. Designed for domain experts who are not developers. Works with Claude Code, OpenCode, and Codex."
 metadata:
   priority: 10
@@ -84,8 +84,15 @@ Before doing anything else, run this state check silently:
 2. Check whether `docs/plan.md` exists.
 3. Attempt to retrieve project state from odd-flow memory:
    - Call `mcp__odd-flow__memory_retrieve` with key `odd-project-state`, namespace `odd-project`
-   - If successful, merge odd-flow state with any local state found in `.odd/state.json`, with odd-flow taking precedence for any field where it has richer data (more personas, outcomes, or a later phase)
-4. **If odd-flow state is richer than local state** (odd-flow has personas/outcomes/approvals that local does not): write the merged state back to `.odd/state.json` immediately using the Write tool. This keeps local state in sync so the next session starts correctly without a mismatch.
+4. **Reconciliation — strict, no silent merging.** If both local and odd-flow state exist, compare them field-by-field. Specifically check `currentBuildPhase`, `currentPhase`, `briefConfirmed`, `sessionBriefCount`, `personas.length`, and `outcomes.length`. If ANY of these disagree:
+   - **STOP.** Do not display the welcome or status message yet.
+   - Show the user a side-by-side diff of the disagreeing fields (local value vs odd-flow value).
+   - Ask explicitly: "Local state and odd-flow state have drifted. Which should I trust as authoritative? Type `local`, `odd-flow`, or `inspect` to see the full diff."
+   - On `local`: store the full local `state.json` to odd-flow with `mcp__odd-flow__memory_store` and proceed.
+   - On `odd-flow`: write the odd-flow value to `.odd/state.json` and proceed.
+   - On `inspect`: print the full diff and ask again.
+   - Do NOT use heuristics like "richer wins" or "later phase wins" — they hide bugs. The user decides.
+5. If local exists and odd-flow does not: store local to odd-flow immediately. If odd-flow exists and local does not: write odd-flow to local immediately.
 
 **If this is a new project** (no state found anywhere), display the welcome message below.
 
@@ -99,7 +106,7 @@ Display this when no existing state is found:
 
 ---
 
-Welcome to ODD Studio v3.7.0.
+Welcome to ODD Studio v3.7.1.
 
 You are about to plan and build something real — using a methodology called Outcome-Driven Development. Before we write a single line of code, we are going to get precise about three things:
 
@@ -123,7 +130,7 @@ Display this when existing state is found. Replace the bracketed values with act
 
 ---
 
-Welcome back to ODD Studio v3.7.0.
+Welcome back to ODD Studio v3.7.1.
 
 **Project:** [project.name]
 **Current Phase:** [state.currentPhase]

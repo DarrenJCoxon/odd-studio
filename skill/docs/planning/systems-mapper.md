@@ -222,11 +222,11 @@ Consumes:
 
 ---
 
-## Ruflo Memory Storage
+## odd-flow Memory Storage
 
-After the contract map is complete and reviewed, store it in ruflo memory.
+After the contract map is complete and reviewed, store it in odd-flow memory.
 
-Call `mcp__ruflo__memory_store`:
+Call `mcp__odd-flow__memory_store`:
 - Key: `odd-contract-map`
 - Namespace: `odd-project`
 - Value: the full contract map document

@@ -26,9 +26,9 @@ Let me start by reading the contract map.
 
 ## Step 1: Read the Contract Map
 
-Before doing anything else, retrieve the contract map from ruflo memory.
+Before doing anything else, retrieve the contract map from odd-flow memory.
 
-Call `mcp__ruflo__memory_retrieve`:
+Call `mcp__odd-flow__memory_retrieve`:
 - Key: `odd-contract-map`
 - Namespace: `odd-project`
 
@@ -197,130 +197,629 @@ This is not a test. It is a check that the plan makes intuitive sense to the dom
 
 ---
 
-## Step 9: Technical Architecture
+## Step 9: Technical Architecture — Component-by-Component Decision-Making
 
-The plan is structurally complete. Before the Session Brief is written and the build begins, one more conversation must happen — the most consequential technical decision in the project.
+The plan is structurally complete. Before the Session Brief is written and the build begins, the most consequential technical decisions in the project must happen — and you and the domain expert will make them together, one layer at a time.
 
-Until now, every question you asked was a domain question. You were drawing out knowledge the domain expert already held. This step is different. You — Rachel — are now the expert. The domain expert is listening, evaluating, and ultimately deciding, but the recommendation comes from you.
+This step is fundamentally different from the previous eight. Until now, you drew out knowledge the domain expert already held. Now you bring technical expertise to the table. But expertise does not mean autonomous decision-making. It means presenting options with clear trade-offs, then stepping back while the domain expert chooses.
 
-**Read the full specification before making any recommendation.**
+**Do NOT present a matrix of pre-bundled stacks.** Technology choices are independent — the domain expert should be able to choose Next.js with Supabase and NextAuth, or SvelteKit with Neon and Clerk, or any other valid combination. Each layer is its own decision.
 
-You already have the contract map. Now read everything else:
+**Phase 1: Research and Prepare**
+
+Read the full specification to understand the constraints:
 - Every persona: their context, technical confidence, devices, volume
 - Every walkthrough: load implications, real-time requirements, data complexity, integration needs
 - Every contract: data relationships, how deeply interconnected the outcomes are
 - The phase structure: scale and depth of what is being built
 
-Do not generate a generic recommendation. Generate a recommendation specific to this project, with evidence drawn from the specification.
+**Phase 2: Walk Through Each Decision — One at a Time**
 
-**Make a concrete recommendation — not a list of options.**
+Present each technology layer as its own decision. For each layer, present 3-4 credible options with trade-offs tied to THIS project's specification. Wait for the domain expert to choose before moving to the next layer.
 
-Do not say "here are some technologies you might consider." Say "this is what I recommend, and here is why." Name specific tools. Justify each one using what the specification reveals.
+**The sequence:**
 
-Structure the recommendation as follows:
+1. Framework
+2. Database
+3. Authentication
+4. Hosting & Deployment
+5. Specialist Services (if needed — email, payments, real-time, etc.)
 
----
-
-**My recommendation for [project name]:**
-
-[Name the complete stack — framework, database, hosting, any key third-party services such as payments, email, authentication]
-
-**Why this stack:**
-
-For each component, give a specific reason tied to the specification. Reference the walkthrough, the contracts, the persona characteristics. For example:
-
-- "Your data is deeply relational — [Outcome A] produces a record that [Outcome B], [Outcome C], and [Outcome D] all consume, with different fields from each. A relational database handles this natively."
-- "Your [persona]'s walkthrough requires real-time availability counts — the number must update immediately when another user acts. This requires [specific approach]."
-- "You have [n] outcomes with payment flows. [Specific service] handles PCI compliance natively, removing an entire category of security implementation from the build."
-
-**What I considered and rejected:**
-
-Name the alternatives that a reasonable person might suggest for this kind of project, and explain specifically why they do not fit this specification.
+For each layer, follow this pattern:
 
 ---
 
-**Always include in the recommendation: Drizzle and Vitest.**
+**Decision [N]: [Layer Name]**
 
-Regardless of the other stack choices, these two tools are always part of every recommendation. Do not present alternatives for them unless the domain expert raises a specific existing constraint.
+"Now we choose your [layer]. Based on your specification, here are the realistic options:"
 
-**Drizzle ORM** — always recommended as the database layer.
+**[Option A]**
+- What it is: [one sentence]
+- Why it fits your project: [specific evidence from the specification — reference a persona, outcome, or contract]
+- Trade-off: [what you give up — cost, complexity, lock-in, learning curve]
 
-Drizzle defines the database structure in the same language as the rest of the project. The build agents know exactly what fields exist, what types they hold, and what relationships connect them — because that knowledge lives in the codebase, not in a separate database that agents can only observe indirectly. Drizzle also handles migrations: every change to the database structure is recorded as a versioned, reversible change and committed to git alongside the code that depends on it. If a field is renamed or a relationship removed, the migration records it — the build agents do not guess.
+**[Option B]**
+- What it is: [one sentence]
+- Why it fits your project: [specific evidence from the specification]
+- Trade-off: [what you give up]
 
-Explain to the domain expert: "Drizzle is the tool that keeps the AI honest about your data. Without it, build agents are making educated guesses about what is in your database. With it, they know exactly what is there, and every change to that structure is tracked the same way as every change to the code. Drizzle also means that if something goes wrong with the database, we can reverse the last change precisely — the same way git lets us reverse the last code change."
+**[Option C]**
+- What it is: [one sentence]
+- Why it fits your project: [specific evidence from the specification]
+- Trade-off: [what you give up]
 
-**Vitest** — always recommended as the testing framework.
+"Which of these fits best for your project? Are there constraints I don't know about that rule any of these out?"
 
-Every outcome has a verification checklist — steps the domain expert follows in the browser to confirm the outcome works. But some behaviours cannot be verified by clicking: business rules that run invisibly, calculations, access control logic, the rule that prevents one organiser from editing another's event. Vitest runs automated checks for these. It uses the same configuration as the project's build tooling — no separate setup, no configuration conflict. It runs tests in parallel and completes in seconds. It supports TypeScript natively, so tests share the same type definitions as the code they test.
+---
 
-Explain to the domain expert: "Vitest runs the checks that you cannot run by clicking through the browser — the business rules and calculations that happen invisibly inside the system. Every time an outcome is built, Vitest runs these checks automatically. If a rule that was working correctly breaks because of a new change somewhere else, Vitest catches it before you reach the verification step. Think of it as a safety net underneath the verification you do yourself."
+**Do not recommend. Offer. Let the domain expert choose.**
 
-**Invite genuine pushback.**
+Wait for their answer. Record it. Move to the next layer.
 
-After presenting the recommendation, explicitly invite the domain expert to challenge it:
+If the domain expert raises a concern:
+- If the concern reveals a constraint you missed: "You are right — I did not weight [constraint] heavily enough. Let me revise."
+- If the concern is a misunderstanding: "I want to clarify — [option] actually handles [capability] this way."
+- If the concern reveals a preference: "That preference carries a trade-off: [concrete consequence]. If you are comfortable with that, we proceed."
 
-"That is my recommendation based on everything in your specification. I want you to push back if anything does not fit. If you have experience with a different stack, or a constraint I do not know about — a team that uses a specific technology, a budget that rules something out, a compliance requirement — tell me now. This decision is harder to change after the build starts than before."
+**Important rules for each decision:**
+- Never bundle choices together. Framework is independent of database is independent of auth.
+- Never exclude valid combinations. If someone wants Next.js + Supabase + NextAuth, that is a valid stack.
+- Always tie reasoning to the specification. "This fits because Outcome 2.1 requires real-time updates for 90 students" — not "This is popular."
+- If a previous choice constrains the next (e.g., choosing Supabase for database means Supabase Auth is available as an auth option), mention it as context but do not force it.
 
-**Respond to challenges with reasoning, not capitulation.**
+**Phase 3: Fixed Layer and Testing Decision**
 
-If the domain expert suggests an alternative, engage with it seriously:
-- If the alternative is genuinely suitable: "You are right — [reason]. I had not weighted [factor] heavily enough. Let me revise the recommendation."
-- If the alternative creates a risk: "I understand the preference for [alternative]. I want to make sure you understand the specific trade-off it creates for this project: [concrete consequence tied to the specification]. If you are comfortable with that trade-off, we proceed with [alternative]. If not, [original recommendation] avoids it."
+After all choices are made, explain the fixed ORM layer:
 
-Do not abandon a recommendation simply because the domain expert expresses a preference. The domain expert has the final say — but they should make that decision with full information.
+**Drizzle ORM** — the database layer that keeps the AI honest.
 
-**Record the decision in CLAUDE.md.**
+"Drizzle is the tool that ensures the build agents always know the exact shape of your data. Every field, every type, every relationship lives in your codebase as versioned migrations. When something goes wrong, we can reverse the last change precisely — the same way git lets us reverse code changes. Without Drizzle, agents are guessing about your database. With it, they know."
 
-When consensus is reached, append a technical decisions section to `CLAUDE.md`:
+Drizzle is not negotiable. It exists because the build agents need it, not because of preference.
+
+**Then present the testing decision.**
+
+"Now we choose your testing framework. Automated tests run the business rules and calculations you cannot verify by clicking — access control logic, pricing calculations, workflow state transitions. Every outcome built triggers the test suite automatically. If a rule breaks because of a change somewhere else, the tests catch it before you reach the verification step."
+
+Present the testing options:
+
+**Decision: Testing Framework**
+
+**Vitest** (recommended)
+- What it is: A fast, modern test runner built for the JavaScript/TypeScript ecosystem, with native ESM support and a jsdom browser environment for component testing.
+- Why it fits: Vitest understands your project's TypeScript and path aliases out of the box. It runs in under 2 seconds for most test suites. It includes everything needed — assertions, mocking, fake timers, coverage — with zero extra configuration.
+- Trade-off: None significant. This is the default because it works best with the ODD build process.
+
+**Jest**
+- What it is: The most widely-used JavaScript test runner. Battle-tested, enormous ecosystem.
+- Why it fits: If your team already uses Jest and has existing test patterns, consistency may matter more than speed.
+- Trade-off: Slower than Vitest, requires additional configuration for TypeScript and ESM, heavier setup.
+
+**Playwright Test** (for E2E-only projects)
+- What it is: A browser-based test runner. Tests run against a real browser, not jsdom.
+- Why it fits: If your project is almost entirely UI with minimal business logic, browser-level testing may be more valuable than unit tests.
+- Trade-off: Much slower per test, requires a running dev server, not suitable for testing pure business logic in isolation.
+
+"Which testing framework do you prefer? Vitest is the default because it integrates cleanly with the build process — but if you have a strong preference, we will use it."
+
+If the domain expert has no preference or chooses Vitest, proceed with Vitest. Record the choice.
+
+**Phase 4: Summarise and Confirm**
+
+After all decisions are made, present the complete stack as a summary:
+
+"Here is the technical stack you have chosen, decision by decision:
+
+- **Framework**: [chosen] — because [reason from their decision]
+- **Database**: [chosen] — because [reason from their decision]
+- **ORM**: Drizzle (fixed — build agent requirement)
+- **Auth**: [chosen] — because [reason from their decision]
+- **Hosting**: [chosen] — because [reason from their decision]
+- **Testing**: [chosen — default Vitest] — because [reason]
+- [Any specialist services]: [chosen] — because [reason from their decision]
+
+Does this look right? Any second thoughts before I record it?"
+
+Wait for confirmation. If they want to change a layer, go back to that specific decision — do not re-run the entire sequence.
+
+**Phase 5: Record the Decision**
+
+When the domain expert confirms, record the complete stack in CLAUDE.md and project memory.
+
+Append a technical decisions section to `CLAUDE.md`:
 
 ```
 ## Technical Stack
 
-Chosen stack: [list each component]
-ORM: Drizzle
-Testing: Vitest
+**Chosen stack:**
+- Framework: [chosen]
+- Database: [chosen]
+- ORM: Drizzle
+- Auth: [chosen]
+- Testing: [chosen — default Vitest]
+- Hosting: [chosen]
+- [Other services]: [chosen]
 
-Reasoning:
-- [Component]: [why, tied to the specification]
-- [Component]: [why, tied to the specification]
-- Drizzle: type-safe database layer with versioned migrations — build agents always know the exact shape of the data and every change is tracked
-- Vitest: fast, co-located testing with native TypeScript support — catches business rule regressions automatically before verification
+**Decision reasoning (tied to specification):**
+- Framework: [why, with reference to specific outcome or persona]
+- Database: [why, with reference to specific outcome or persona]
+- Auth: [why, with reference to specific outcome or persona]
+- Hosting: [why, with reference to specific outcome or persona]
+- Drizzle: type-safe database layer with versioned migrations — build agents always know the exact shape of the data and every change is tracked alongside code changes
+- Testing: [chosen framework — default Vitest] — automated testing for invisible business rules — catches regressions before verification
 
-Considered and rejected:
-- [Alternative]: [why it does not fit this project]
+**Alternatives considered (per layer):**
+- Framework: [rejected options and why — specific constraint from the specification]
+- Database: [rejected options and why]
+- Auth: [rejected options and why]
+- Hosting: [rejected options and why]
 
-Domain expert constraints applied: [any preferences or constraints the domain expert specified, or "none"]
+**Domain expert decision notes:**
+[Any specific preferences, constraints, or reasoning the domain expert expressed across the decisions]
 ```
 
-**Store the decision in ruflo memory.**
+**Store the decision in odd-flow memory.**
 
-Call `mcp__ruflo__memory_store`:
+Call `mcp__odd-flow__memory_store`:
 - Key: `odd-tech-stack`
 - Namespace: `odd-project`
-- Value: the complete technical stack decision including chosen tools, ORM, testing framework, reasoning, and rejected alternatives
+- Value: the complete technical stack decision with per-layer reasoning tied to the specification
 
 **Update `.odd/state.json`:**
 - Set `techStackDecided: true`
-- Set `techStack` to the chosen framework
+- Set `techStack` to the chosen stack description (e.g., "Next.js 16 + Supabase + NextAuth + Vercel")
 - Set `orm` to "Drizzle"
-- Set `testingFramework` to "Vitest"
-- Update `nextStep` to "Set up the project — type *build to scaffold the project and configure your services"
+- Set `testingFramework` to the chosen testing framework (default "Vitest")
+- Update `nextStep` to "Choose the design approach, then generate architecture and design system documents"
 
-Confirm to the user: "Technical stack recorded in CLAUDE.md and project memory. Every build agent will read this before writing a line of code. When you type *build, I will scaffold the project and guide you through connecting your services."
+Confirm to the user: "Technical stack chosen and recorded. Every build agent will read this before writing a line of code."
+
+---
+
+## Step 9b: UI & Design Decision — Collaborative Visual Planning
+
+With the technical stack decided, the next decision shapes how your personas experience the system: the design approach, layout strategy, visual language, and component philosophy.
+
+This step mirrors Step 9's collaborative structure — you will identify design options, generate wireframes for visual review, and choose the approach that best serves your personas and your domain.
+
+**Phase 1: Understand Design Context**
+
+Read the full specification to identify design constraints:
+
+- **Personas**: Who is using this? What is their technical confidence? Do they need minimal, focused interfaces or rich, data-dense dashboards?
+- **Outcomes**: Which outcomes have screens the persona interacts with? What information must be present, and what can be secondary?
+- **Devices**: Desktop, mobile, tablet, kiosk? Are there accessibility or compliance requirements?
+- **Volume**: High-frequency routine use or occasional intensive sessions? Does interface consistency matter more than density?
+- **Domain language**: Is this a specialized domain with particular conventions (e.g., clinical, financial, legal)? The UI should speak that language.
+
+**Phase 2: Identify Realistic Design Approaches**
+
+Based on the specification, define 3-4 credible design strategies. Include:
+
+1. **Minimalist + Dark (Recommended Default)**
+   - Dark background (slate/zinc), single accent colour, clear borders
+   - Single-column on mobile, grid on desktop
+   - Component library: shadcn/ui + Geist
+   - Philosophy: clarity through space and type
+
+2. **Dense Dashboard + Light**
+   - Light background, information-rich tables and charts
+   - Multi-column layouts designed for desktop-first use
+   - Keyboard shortcuts, advanced filters, inline editing
+   - Philosophy: power users who live in the interface
+
+3. **Minimal + Accessible**
+   - WCAG AAA compliance (not just AA)
+   - High contrast, large touch targets, full keyboard navigation
+   - Screen-reader optimized semantic HTML
+   - Philosophy: inclusive design that serves all personas equally
+
+4. **Brand-Driven + Custom**
+   - Custom design system (if the domain demands visual distinction)
+   - Domain-specific visual language (e.g., clinical software → muted greens, financial → professional grays)
+   - Hand-crafted components specific to this domain
+   - Philosophy: interface as part of the brand experience
+
+Do NOT include absurd alternatives. Every option must be defensible based on your specification.
+
+**Phase 3: Generate Wireframes (Optional — Excalidraw)**
+
+If the excalidraw skill is available, generate wireframes for each design approach showing:
+
+- One key outcome flow (the most important persona interaction)
+- Layout: how information is organized, where navigation lives, how forms and data are presented
+- Component style: buttons, inputs, cards, modals — representative of the chosen approach
+- Mobile variant (if relevant to specification)
+
+Call the excalidraw skill (via `/excalidraw` command) with a prompt like:
+
+```
+Generate wireframes for [Design Approach Name] for our [project name] platform.
+
+Context:
+- Primary persona: [name], a [role]
+- Key outcome: [outcome name] — [one-sentence description of what they do]
+- Approach philosophy: [brief description of this design approach]
+- Devices: [desktop/mobile/both]
+- Visual style: [dark/light, minimalist/dense, etc.]
+
+Show:
+1. Desktop layout of the main interaction
+2. Mobile layout (if applicable)
+3. Key UI components (buttons, inputs, cards) in this style
+4. Navigation pattern
+
+Keep wireframes simple — focus on layout and information hierarchy, not pixel-perfect design.
+```
+
+**If excalidraw is not available:** describe each design approach in detail using text — layout diagrams using ASCII/markdown, component examples, and colour/typography descriptions. The domain expert can still make an informed decision without visual wireframes. The decision is about philosophy and approach, not pixel-level detail.
+
+**Phase 4: The Domain Expert Reviews and Decides**
+
+Present the wireframes side-by-side and ask:
+
+"I have generated wireframes for four design approaches. Each matches a different priority from your specification:
+
+- **Option A** prioritizes clarity and simplicity — perfect if your personas are occasional users or if the domain is already complex.
+- **Option B** is information-dense — best if your personas spend hours in the system and need to see patterns and relationships at once.
+- **Option C** emphasizes accessibility — ensures every persona, regardless of ability, can use the system equally.
+- **Option D** is custom and domain-specific — creates a visual identity that positions your platform as specialized.
+
+Review the wireframes. Tell me:
+- Which design approach feels most natural for how [persona name] would work?
+- Are there any constraints I missed — device types, accessibility requirements, team design preferences?
+- If you could describe the 'feel' of the interface in three words, what would they be?"
+
+**Do not push a recommendation. Let the domain expert choose based on the wireframes they see.**
+
+**Phase 5: Record the Design Decision**
+
+When the domain expert chooses, record the decision.
+
+Append to `CLAUDE.md`:
+
+```
+## Design Approach
+
+**Chosen design approach:**
+[Design approach name]
+
+**Reasoning (tied to specification):**
+- [Persona]: [why this design serves them, with specific reference to an outcome]
+- [Persona]: [why this design serves them]
+- Information architecture: [how the chosen approach organizes information for this domain]
+- Component library: [shadcn/ui + custom theming OR domain-specific components]
+- Accessibility: [WCAG AA / AAA / custom standards]
+
+**Alternatives considered:**
+- [Option X]: [why it did not fit — specific constraint from the specification]
+- [Option Y]: [why it did not fit — specific constraint from the specification]
+
+**Domain expert decision notes:**
+[Any specific preferences, constraints, or reasoning the domain expert expressed]
+```
+
+Store in odd-flow memory:
+
+Call `mcp__odd-flow__memory_store`:
+- Key: `odd-design-approach`
+- Namespace: `odd-project`
+- Value: the complete design decision with reasoning tied to the specification and wireframe references
+
+Update `.odd/state.json`:
+- Set `designApproachDecided: true`
+- Set `designApproach` to the chosen approach name
+- Update `nextStep` to "Generate architecture and design system documents (Step 9d), then type /odd-build to scaffold and start Phase A"
+
+Confirm to the user: "Design approach chosen and recorded. [Design approach name] will guide all screens in this project. Every build agent will reference these wireframes when implementing the UI."
+
+---
+
+## Step 9c: Layout Architecture — Navigation and Page Structure
+
+The design approach (Step 9b) defines the visual philosophy. This step defines the **structural skeleton** — how pages connect, where navigation lives, and what persists across every screen. Without this step, build agents implement each outcome as an isolated page with no awareness of how users move between them. This is the single most common cause of UI that "works" but feels broken.
+
+**This step is mandatory for any project with more than 3 authenticated pages.**
+
+### Phase 1: Map Every Screen
+
+List every outcome that produces a screen the persona interacts with. For each, note:
+- The route (e.g. `/feed`, `/profile/[id]`, `/write`)
+- The persona who uses it most
+- How often it is visited (every session vs occasionally vs rarely)
+
+Display this as a table:
+
+"Here are all the screens in your system:
+
+| Screen | Route | Primary persona | Frequency |
+|--------|-------|-----------------|-----------|
+| [name] | [route] | [persona] | [every session / often / rarely] |
+
+This is the navigation map your users will live inside. Every one of these screens must be reachable from every other screen within two taps. No dead ends."
+
+### Phase 2: Identify the Navigation Pattern
+
+Based on the screen count and usage frequency, present 2-3 navigation patterns:
+
+**For 5+ screens with frequent cross-navigation (most apps):**
+
+**Option A — Sidebar + Header (LinkedIn/Linear pattern)**
+- Persistent left sidebar (240px desktop, icons-only on tablet, hidden on mobile)
+- Sticky top header with logo, search, and key actions
+- Optional right rail for contextual content (desktop only)
+- Mobile: bottom tab bar with 5 most-used items
+- Best for: platforms where users switch between sections frequently
+
+**Option B — Top Navigation + Content (Substack/Medium pattern)**
+- Sticky top header with horizontal nav links
+- Single-column content area, no sidebar
+- Mobile: hamburger menu or bottom tabs
+- Best for: reading-focused platforms with fewer frequent destinations
+
+**Option C — Bottom Navigation Only (Mobile-First pattern)**
+- No desktop sidebar — horizontal top bar for desktop
+- Fixed bottom tab bar (5 items) for mobile AND tablet
+- Best for: mobile-first products with simple navigation
+
+For each option, explain how it serves the personas:
+
+"Your acid-test persona, [name], visits [these screens] every session. Option A gives them one-tap access to all of them via the sidebar. Option B would require opening a menu first. Which navigation pattern matches how [persona name] actually moves through the system?"
+
+**Do not recommend. Present options tied to the specification. Let the domain expert choose.**
+
+### Phase 3: Define the Navigation Items
+
+After the pattern is chosen, define the exact navigation items:
+
+**Primary navigation** (always visible — sidebar or bottom tab bar):
+- List the 5-7 most-used screens
+- For each: icon (Lucide icon name), label, route
+- Identify any items that are conditional (e.g. only visible to paid users, only visible to admins)
+
+**Secondary navigation** (sidebar only, below a divider — hidden in mobile bottom nav):
+- Less-frequently-used screens
+- Settings, analytics, admin tools
+
+**Display:**
+
+"Here is the navigation structure:
+
+**Always visible:**
+| Item | Icon | Route | Condition |
+|------|------|-------|-----------|
+| Home | Home | /feed | Always |
+| ... | ... | ... | ... |
+
+**In sidebar only (desktop/tablet):**
+| Item | Icon | Route | Condition |
+|------|------|-------|-----------|
+| Settings | Settings | /settings | Always |
+| ... | ... | ... | ... |
+
+On mobile, the secondary items are accessible via the profile/avatar menu in the header.
+
+Does this match how [persona name] would expect to navigate?"
+
+### Phase 4: Define the Layout Grid
+
+Specify the column structure and breakpoints:
+
+"Here is the page layout at each screen size:
+
+**Desktop (1280px+):**
+[Sidebar 240px] | [Content 680px] | [Right rail 300px (optional)]
+
+**Tablet (768px–1279px):**
+[Sidebar 64px icons] | [Content 680px]
+
+**Mobile (<768px):**
+[Content 100%]
+[Bottom nav 56px fixed]
+
+The header is always [height]px, sticky at the top, showing [logo / search / actions].
+
+Does this feel right for how your personas work? Are any of them primarily mobile users who need different treatment?"
+
+### Phase 5: Define the App Shell
+
+The app shell is the shared layout component that wraps ALL authenticated pages. It includes:
+- The sticky header
+- The sidebar (desktop/tablet)
+- The content area where page content renders
+- The right rail (desktop only, optional per page)
+- The bottom tab bar (mobile only)
+
+"The app shell is the skeleton of your platform. Every page your personas visit will be wrapped in this structure. The navigation never disappears. The header never changes. When Darren goes from reading his feed to writing a post, the sidebar stays in place and only the content area updates. This is what makes a platform feel cohesive instead of like a collection of separate pages."
+
+### Phase 6: Record the Layout Architecture
+
+Append to `CLAUDE.md`:
+
+```
+## Layout Architecture
+
+**Navigation pattern:** [chosen pattern name]
+
+**Navigation items:**
+
+Primary (always visible):
+| Item | Icon | Route | Condition |
+|------|------|-------|-----------|
+| [item] | [icon] | [route] | [condition] |
+
+Secondary (sidebar only):
+| Item | Icon | Route | Condition |
+|------|------|-------|-----------|
+| [item] | [icon] | [route] | [condition] |
+
+**Layout grid:**
+- Desktop (xl: 1280px+): Sidebar [width] | Content [width] | Right rail [width]
+- Tablet (md: 768px–xl): Sidebar [collapsed width] | Content [width]
+- Mobile (<md): Content 100% | Bottom nav [height] fixed
+
+**Header:** [height]px sticky, contains: [logo, search, actions]
+
+**App shell components:**
+- `components/app-shell.tsx` — responsive grid
+- `components/sticky-header.tsx` — top bar
+- `components/desktop-sidebar.tsx` — left nav
+- `components/mobile-bottom-nav.tsx` — bottom tabs
+- `components/right-rail.tsx` — contextual side panel
+
+**Rule:** Every authenticated page renders inside the app shell. No page may render its own navigation. No page may be a dead end.
+```
+
+Create `docs/ui/navigation-map.md` with a visual diagram showing how every screen connects.
+
+Store in odd-flow memory:
+
+Call `mcp__odd-flow__memory_store`:
+- Key: `odd-layout-architecture`
+- Namespace: `odd-project`
+- Value: the complete layout architecture specification
+
+Update `.odd/state.json`:
+- Set `layoutArchitectureDecided: true`
+- Update `nextStep` to "Generate architecture and design system documents (Step 9d), then type /odd-build to scaffold and start Phase A"
+
+Confirm to the user: "Layout architecture defined and recorded. The app shell specification is in CLAUDE.md. Every build agent will build inside this structure — no isolated pages, no dead ends, no missing navigation."
+
+---
+
+## Step 9d: Generate Architecture and Design System Documents
+
+After the tech stack (Step 9), design approach (Step 9b), and layout architecture (Step 9c) are all decided and confirmed, generate two standalone reference documents that build agents read before writing any code. These documents are the **authoritative** source of truth — they override CLAUDE.md summaries when there is a conflict.
+
+**Why standalone documents?** CLAUDE.md contains summaries of the stack and design decisions. But build agents need full detail: data models, API patterns, colour tokens, component specs, animation rules, accessibility requirements. That level of detail does not belong in CLAUDE.md — it belongs in purpose-built reference documents.
+
+### Generate `docs/architecture.md`
+
+This document describes the complete technical architecture of the project. It is generated from the decisions made in Steps 9 and 9c, plus the contracts and data structures from the contract map.
+
+**Required sections:**
+
+1. **Architecture Philosophy** — one paragraph on the overall approach (e.g., "web-first, migrate to X later" or "full architecture from day one")
+
+2. **Stack Overview** — table of every technology choice with its role. No "or" options — every choice is final. Include:
+   - Framework, styling, database, ORM, AI/LLM (if applicable), auth, email, real-time, testing, deployment
+   - Any specialist services (voice, handwriting, canvas, payments, etc.)
+   - For each: the technology name, what it does in this project, and why it was chosen (tied to a persona or outcome)
+
+3. **Data Architecture** — core database tables/collections with purpose and key relationships. Derived from the contract map's shared contracts and outcome-specific data.
+
+4. **Permission-Based Data Projections** — which persona sees what data and what they never see. Derived from the persona constraints documented in the outcome specifications.
+
+5. **Authentication Architecture** — how each persona type authenticates. B2C vs B2B if applicable. Role-based access levels.
+
+6. **Deployment Architecture** — hosting, preview environments, environment variables (listed by name and purpose, not values).
+
+7. **Environment Variables** — table of every env var the project needs, which service it connects to, and its purpose. This is the template for `.env.local`.
+
+8. **Any domain-specific infrastructure** — AI inference pipelines, real-time sync architecture, agent orchestration, memory systems, etc. Only include sections that are relevant to this specific project.
+
+9. **Security and Compliance** — regulatory requirements that affect the architecture (e.g., GDPR, DfE standards, HIPAA). How the architecture enforces compliance at the infrastructure level.
+
+**Generation rules:**
+- Every technology choice must be a single definitive selection — no "X or Y" options
+- Every choice must be tied to a specific persona, outcome, or contract
+- The document must be self-contained — a build agent reading only this document must understand the full technical landscape
+- Environment variable values are never included — only names and purposes
+
+### Generate `docs/ui/design-system.md`
+
+This document describes the complete visual design system. It is generated from the decisions made in Steps 9b and 9c.
+
+**Required sections:**
+
+1. **Design Philosophy** — the overarching approach in 2-3 sentences. What the interface is and what it is not.
+
+2. **Colour Palette** — complete colour tokens for light mode and dark mode. Every colour used in the project must be defined here as a named token. Include:
+   - Backgrounds (canvas, cards, surfaces)
+   - Text (primary, secondary, muted)
+   - Accent colours (primary action, highlights)
+   - Semantic colours (success, error, warning — with domain-appropriate naming)
+   - Borders and shadows
+
+3. **Typography** — font families, size scale with named tokens, line heights, and usage rules (which font for which context).
+
+4. **Component Reference** — for each shared component: its source (shadcn/ui or custom), its visual properties, and its usage context. Include any domain-specific components that are not in shadcn/ui.
+
+5. **Layout and Spacing** — the responsive grid from Step 9c. Breakpoints, column structure, spacing scale.
+
+6. **Navigation** — the navigation structure from Step 9c. Items, icons, routes, conditions, mobile vs desktop behaviour.
+
+7. **Animation and Motion** — principles (subtle vs expressive), timing values, easing functions, and specific animations for key interactions. List prohibited animation patterns.
+
+8. **Accessibility** — WCAG level, contrast requirements, keyboard navigation rules, screen reader considerations, reduced motion behaviour.
+
+9. **Persona-Specific Views** — if different personas see different UI treatments (e.g., student workspace vs teacher dashboard vs admin view), describe how the design system adapts for each.
+
+10. **Design Tokens — Implementation** — CSS custom properties or Tailwind config that implements the tokens. This is the bridge from the design document to the code.
+
+**Generation rules:**
+- Every colour must have a hex value — no "warm neutral" without a specific code
+- Every font must be named — no "clean sans-serif" without specifying which one
+- Every animation must have a duration and easing — no "subtle transition" without ms and curve
+- The document must be self-contained — a build agent reading only this document must be able to implement any screen in the correct style
+- If wireframes were generated in Step 9b (via excalidraw), reference them
+
+### Update CLAUDE.md
+
+After both documents are generated, update CLAUDE.md to replace the default stack section with a summary of the actual chosen stack and a pointer to the architecture doc:
+
+```
+## Technical Stack (Locked — see docs/architecture.md for full detail)
+- [Framework]: [chosen]
+- [Database]: [chosen]
+- [Each additional layer]: [chosen]
+
+## Design Approach (Locked — see docs/ui/design-system.md for full detail)
+- [Approach name]: [one-line summary]
+- [Key visual decisions]: [palette, typography, component philosophy]
+```
+
+### Store in odd-flow Memory
+
+Call `mcp__odd-flow__memory_store`:
+- Key: `odd-architecture-doc`
+- Namespace: `odd-project`
+- Value: confirmation that `docs/architecture.md` has been generated, with a summary of the stack
+
+Call `mcp__odd-flow__memory_store`:
+- Key: `odd-design-system-doc`
+- Namespace: `odd-project`
+- Value: confirmation that `docs/ui/design-system.md` has been generated, with a summary of the approach
+
+### Update State
+
+Update `.odd/state.json`:
+- Set `architectureDocGenerated: true`
+- Set `designSystemDocGenerated: true`
+
+Confirm to the user: "Architecture document and design system generated. These are the authoritative references for all build agents — every technical and design decision is locked and documented."
 
 ---
 
 ## Step 10: Session Brief Export
 
-After the plan is approved, generate the Session Brief — the document a developer or build AI reads at the start of each build session.
+After the plan is approved, generate the first Session Brief — the document a developer or build AI reads at the start of each build session.
 
-The Session Brief is saved to `docs/session-brief.md`.
+**Session briefs are numbered.** Every phase gets its own brief, and all briefs are retained so the project has a complete history:
+
+- `docs/session-brief-0.md` — Phase A (Foundation)
+- `docs/session-brief-1.md` — Phase B (first outcomes)
+- `docs/session-brief-2.md` — Phase C
+- ...and so on.
+
+The first brief generated here is always `docs/session-brief-0.md`.
 
 Structure:
 
 ```markdown
-# Session Brief — [Project Name] — Phase [X]: [Phase Name]
+# Session Brief [N] — [Project Name] — Phase [X]: [Phase Name]
 Generated: [date]
+Phase: [N] of [total]
 
 ## Overview
 [One paragraph describing the project, its domain, and its primary personas]
@@ -334,28 +833,47 @@ Generated: [date]
 ## Contracts In Play
 [Shared contracts needed for this phase, contracts produced by this phase, contracts consumed from previous phases]
 
+## Available From Previous Phases
+[Contracts and infrastructure produced by completed phases — "None" for Phase A]
+
 ## Verification Steps
 [For each outcome: the complete verification checklist from the outcome specification]
 
+## Layout Architecture
+[The app shell specification from Step 9c — navigation items, column layout, breakpoints,
+responsive behavior. This section is MANDATORY for every session brief. Build agents must
+implement all pages inside this layout structure. No isolated pages. No dead ends.]
+
+## UI Specifications Per Outcome
+[For each outcome in this phase: which layout pattern applies (full-width content, sidebar + content,
+etc.), which shadcn/ui components to use for key interactions, and where the outcome's screen
+sits in the navigation structure. Generated from the Outcome-to-Component Mapping.]
+
 ## Build Sequence
-[Numbered list of build order within the phase, with dependency notes]
+[Numbered list of build order within the phase, with dependency notes.
+NOTE: If this is Phase A, the app shell (layout, navigation, header) must be the FIRST item
+built — before any outcome-specific pages. All subsequent pages render inside the shell.]
 
 ## Known Failure Paths
 [List of documented failure paths from outcome walkthroughs that the build must handle]
 
 ## Not In Scope
 [Explicit list of things that are NOT to be built in this phase, to prevent scope creep]
+
+## Changes From Original Plan
+[If this brief was generated after a plan reconciliation: list what changed and why.
+"None — this is the original plan" for the first brief.]
 ```
 
-After writing the Session Brief, confirm: "Session Brief written to docs/session-brief.md. This is the primary input for your build agents. Share it with Claude or any other build AI to start the session."
+After writing the Session Brief, confirm: "Session Brief 0 written to docs/session-brief-0.md. This is the primary input for your build agents."
 
 ---
 
-## Ruflo Memory Storage
+## odd-flow Memory Storage
 
-After the plan is approved, store it in ruflo memory.
+After the plan is approved, store it in odd-flow memory.
 
-Call `mcp__ruflo__memory_store`:
+Call `mcp__odd-flow__memory_store`:
 - Key: `odd-plan`
 - Namespace: `odd-project`
 - Value: the full Master Implementation Plan including all phases, outcome assignments, dependency notes, and verification milestones
@@ -364,16 +882,17 @@ Confirm to the user: "Master Implementation Plan saved to project memory. All bu
 
 Also store the Session Brief:
 
-Call `mcp__ruflo__memory_store`:
-- Key: `odd-session-brief-phase-[phase-name]`
+Call `mcp__odd-flow__memory_store`:
+- Key: `odd-session-brief-0`
 - Namespace: `odd-project`
-- Value: the contents of `docs/session-brief.md`
+- Value: the contents of `docs/session-brief-0.md`
 
 Then update `.odd/state.json`:
 - Set `planApproved: true`
 - Populate `planPhases` with the array of phase names in build order
 - Set `currentBuildPhase` to Phase A
-- Update `nextStep` to "Type *build — ODD Studio will scaffold the project, connect your services, and begin Phase A"
+- Set `sessionBriefCount` to 1
+- Update `nextStep` to "Type /odd-build — ODD Studio will scaffold the project, connect your services, and begin Phase A"
 
 ---
 
@@ -393,7 +912,7 @@ You did not do this with a whiteboard covered in boxes and arrows. You did not w
 
 This is what Outcome-Driven Development is for.
 
-You are ready to build. Everything the AI needs to work from is now documented and every architectural decision is recorded. Type `*build` — ODD Studio will scaffold the project, generate your service configuration, guide you through connecting each service, and then begin Phase A.
+You are ready to build. Everything the AI needs to work from is now documented and every architectural decision is recorded. Type `/odd-build` — ODD Studio will scaffold the project, generate your service configuration, guide you through connecting each service, and then begin Phase A.
 
 ---
 
@@ -409,11 +928,11 @@ If the domain expert needs to change the plan after approval — adding an outco
 
 4. Regenerate the relevant sections of the Session Brief.
 
-5. Re-store the updated plan in ruflo memory.
+5. Re-store the updated plan in odd-flow memory.
 
 6. Update `.odd/state.json` to reflect the change.
 
-Announce: "The plan has been updated. Here is what changed: [summary]. The build agents will read the updated plan from ruflo memory."
+Announce: "The plan has been updated. Here is what changed: [summary]. The build agents will read the updated plan from odd-flow memory."
 
 ---
 

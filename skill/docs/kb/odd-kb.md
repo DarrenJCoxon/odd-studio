@@ -175,43 +175,41 @@ Most outcome-writing mistakes fall into one of four categories. Knowing them pre
 
 ---
 
-**Trap 1: The Screen Trap**
+**Trap 1: Vagueness**
 
-The screen trap is describing a UI layout instead of an experience. "The teacher sees a dashboard with a sidebar, a header with their name, and a main area with three tabs: Applications, Students, Reports."
+Could this outcome be implemented in more than one way that satisfies its wording but produces different user experiences? "The customer receives a confirmation after booking." Confirmation could be a screen, an email, a text message, or all three. The wording does not distinguish between them.
 
-This describes where things are. It says nothing about what happens when the teacher interacts with anything. The AI will build a layout. It will not know what any of the elements do.
-
-**Fix:** Start from action. "The teacher opens the Applications tab and sees a list of pending applications. She clicks an application to review it." Describe behaviour, not layout. Layout is derived from behaviour.
+**Fix:** Add specificity. "The customer sees a confirmation screen immediately after payment, displaying the booking reference, event name, and date. A confirmation email with the same details and a calendar invitation arrives within five minutes."
 
 ---
 
-**Trap 2: The Ambiguous Verb Trap**
+**Trap 2: Technical Language**
 
-"The teacher manages applications." Manages how? Approves? Rejects? Puts on hold? Archives? Reassigns?
+Does any part of this outcome describe implementation rather than behaviour? "A POST request is sent to the booking endpoint, and a 201 response confirms the reservation."
 
-Every verb in an outcome experience must be concrete enough to be tested. If you cannot write a pass/fail test for a verb, the verb is too ambiguous.
+The AI will build exactly that. But the outcome says nothing about what the person sees, how they know it worked, or what happens if it fails.
 
-**Fix:** Replace abstract management verbs (manage, handle, oversee, administer) with specific action verbs (approve, reject, put on hold, move to, send, generate, publish, archive).
+**Fix:** Rewrite every technical phrase in domain language. "The booking is confirmed immediately on screen, and the customer does not need to refresh or navigate away to see the result."
 
 ---
 
-**Trap 3: The Missing Failure Trap**
+**Trap 3: Happy Path Only**
 
-Happy-path only. "The teacher fills in the form and submits it. They see a success message." What happens if the form is incomplete? What happens if the student's application is already approved by someone else? What happens if the cohort is full?
+Does the walkthrough describe only what happens when everything goes right? "The customer selects tickets, pays, and receives confirmation." What happens if the requested number exceeds availability? What happens if payment fails? What happens if their session expires mid-checkout?
 
 A system that only handles happy paths is not a finished system. It is a prototype.
 
-**Fix:** For every action in the experience, ask: what can go wrong? Add the failure cases to the walkthrough. "If the cohort is already at capacity when Maya clicks Confirm Approval, a dialog appears: 'This cohort is now full. You can approve Jordan to the waitlist or to a different cohort.'"
+**Fix:** For every action in the walkthrough, ask: what can go wrong? Add the failure cases. "If the requested number exceeds availability, they are informed immediately and shown the current limit. They can adjust their selection."
 
 ---
 
-**Trap 4: The Floating Outcome Trap**
+**Trap 4: Kitchen Sink**
 
-An outcome that does not connect to anything. No contracts consumed (it appears from nowhere). No contracts exposed (it produces nothing). Or contracts that reference data that does not exist in any other outcome.
+Does this outcome try to do more than one thing? Could its walkthrough be split into two or more distinct walkthroughs with separate triggers and separate verification checklists?
 
-The floating outcome is symptom of planning in isolation — designing screens without thinking about where the data comes from or where it goes.
+"The customer browses events, selects one, books tickets, and manages their booking." That is at least two outcomes: browsing and booking (trigger: curiosity) versus managing an existing booking (trigger: they need to change something). Different triggers. Different verification. Different failure paths.
 
-**Fix:** For every outcome, ask: where does the data in this experience come from? Where does the data produced here go? Draw the arrows. If an arrow has no destination, the plan is incomplete.
+**Fix:** Split the outcome. Each distinct trigger becomes a separate outcome. Each piece of behaviour with its own verification becomes its own specification.
 
 ---
 
@@ -225,64 +223,69 @@ ODD uses a 7-dimension persona model. Each dimension is a constraint on the outc
 
 **1. Identity**
 
-Name, role, relationship to the organisation. Specific enough to be real. "Maya Thompson, Cohort Teacher at Westfield Sixth Form College, permanent staff, 8 years in post."
+Who they are in the context of this system. Not their age or job title in the abstract, but their relationship to the system. Specific enough to be real. "Maya Thompson, Cohort Teacher at Westfield Sixth Form College, permanent staff, 8 years in post — a returning customer who has attended at least two previous events and has an active account."
 
 The specificity matters because it prevents scope creep. The outcomes for "Maya" are outcomes for a permanent, experienced teacher with full cohort permissions — not outcomes for a supply teacher, not outcomes for a trainee, not outcomes for a teacher at a different organisation.
 
 ---
 
-**2. Goal**
+**2. Reality**
 
-The single thing this persona is trying to accomplish when they engage with your system. One goal, clearly stated. "Maya wants to manage her cohort without administrative overhead consuming her teaching time."
+The physical environment they are in when they use this outcome. Device, connection quality, noise level, time pressure. Not their current process — their actual situation at the moment they interact with the system.
 
-If you cannot state the goal in one sentence, you probably have two personas.
+"Maya uses the system during form period (20 minutes), on a school laptop with Chrome, stable wifi. Sometimes she checks it on her personal iPhone in the evening at home, where she has more time but is less focused."
 
----
-
-**3. Context**
-
-When, where, and how this persona typically uses the system. "Maya uses the system during form period (20 minutes), during free periods (40 minutes maximum), and occasionally at home in the evening. She uses a school laptop (Chrome browser) and sometimes her personal iPhone."
-
-Context shapes UI decisions: mobile-first for evening use, keyboard shortcuts for power users, accessible font sizes for older displays.
+Reality shapes UI decisions: mobile-first for evening use, responsive design for different devices, fast interactions for time-pressured sessions.
 
 ---
 
-**4. Knowledge**
+**3. Psychology**
 
-What does this persona already know that affects how they use the system? "Maya understands the college's admissions policies in detail. She does not know what happens technically after she submits a decision — she expects the system to handle notifications and record-keeping."
+Technical confidence, stress level, tolerance for confusion. Not just whether they can use software — how they feel when using it, how quickly they give up when something is unclear.
 
-Knowledge dimensions prevent you from over-explaining domain concepts the persona already understands, or under-explaining system concepts they do not.
+"Maya is confident with online systems, low stress when using the platform during a free period, expects the process to take under two minutes. Will abandon if it takes longer or requires more than two steps she does not understand."
 
----
-
-**5. Permissions**
-
-What is this persona allowed to do? What are they explicitly not allowed to do?
-
-"Maya can: view all applications for her cohort, approve and reject applications, add notes to student records, view attendance data for her cohort.
-Maya cannot: view applications for other cohorts, change course configurations, access financial data, approve applications for courses she does not teach."
-
-Permissions define data boundaries. They are the input to your authentication and authorisation logic.
+Psychology shapes how we write outcomes — specifically the walkthrough and the failure paths. A confident persona tolerates a compact flow. An anxious one needs reassurance at every step.
 
 ---
 
-**6. Pain Points**
+**4. Trigger**
 
-What is currently broken or frustrating about how this person does their work? What does the current state cost them?
+What brought them to this outcome. Not a UI click, but a real-world event. The moment that makes them reach for the system.
 
-"Maya currently receives application PDFs by email. She has to open each one, copy information into a spreadsheet, reply manually to each applicant, and update a shared tracker. This takes her 3 hours every application round."
+"Maya saw an event announcement on the bookshop's social media and wants to reserve a place before it fills up."
 
-Pain points anchor outcomes to real needs. They prevent you from building technically correct but practically useless software.
+Triggers are the opening of every outcome we write. Different triggers produce different emotional and practical starting states — and the platform must meet the persona in that state.
 
 ---
 
-**7. Success State**
+**5. History**
 
-What does a good outcome look like for this persona? How will they know the system is working?
+What they have done before arriving at this outcome. Their prior experience with the platform — what they already know, what they have already set up, what does not need explaining.
 
-"Maya can process 20 applications in under 30 minutes, is confident that every applicant has been notified, and never needs to check whether her decisions were recorded correctly."
+"Maya has used the platform before, has saved payment details, and knows how the booking flow works. Nothing needs explaining."
 
-Success states become the benchmarks for outcome verification. They are the answer to "how good is good enough?"
+History determines how much the system needs to explain. A returning user who knows the flow needs speed. A first-time visitor needs context at every step.
+
+---
+
+**6. Success**
+
+What "done" looks like from their perspective. Not what the system logs — what they feel. The moment they know it worked and can move on.
+
+"Maya knows she has a place, she knows when it is, and she will not forget. The confirmation must include enough detail to feel settled, and the calendar invitation is not optional."
+
+Success drives the design of every confirmation screen and every verification step. It is the persona's definition of done, not the system's.
+
+---
+
+**7. Constraints**
+
+What they cannot or will not do. The hard limits that define the outer boundary of acceptable design.
+
+"Maya will not phone the shop to book. Will not create a new account if her login fails. Will not wait more than a few seconds for a page to load."
+
+Constraints turn vague quality expectations into specific design requirements. Any outcome that violates them will fail in practice, no matter how well it works technically.
 
 ---
 
@@ -376,7 +379,7 @@ Reading a dependency graph:
 
 The dependency graph tells you the build order. You cannot build Outcome 7 (teacher reviews application) before Outcome 4 (student submits application) because 7 consumes what 4 produces. You can build Outcomes 4 and 5 in parallel if they share no dependencies.
 
-When you brief Claude Code or a Ruflo swarm for a phase, the dependency graph determines what gets built first and what can be built simultaneously.
+When you brief Claude Code or a odd-flow swarm for a phase, the dependency graph determines what gets built first and what can be built simultaneously.
 
 ---
 
@@ -402,7 +405,7 @@ See `build/build-protocol.md` for the full protocol. Summary:
 
 ODD Studio handles all build mechanics. The domain expert follows a three-step session rhythm:
 
-1. **Type `/odd`** — ODD Studio reads the full project state from ruflo memory and reports exactly where the build stands. No re-briefing required.
+1. **Type `/odd`** — ODD Studio reads the full project state from odd-flow memory and reports exactly where the build stands. No re-briefing required.
 
 2. **Type `*build` or `*swarm`** — ODD Studio briefs the build AI with the full six-field specification, relevant contracts, and context from previous outcomes. The domain expert waits.
 
@@ -410,7 +413,7 @@ ODD Studio handles all build mechanics. The domain expert follows a three-step s
 
 After all outcomes in a phase are verified, ODD Studio runs the Integration Protocol automatically: handshake check, data flow trace, and cross-persona check. The domain expert confirms each. The phase is committed.
 
-**The domain expert never re-briefs the AI, tracks state manually, writes handover notes, or identifies shared infrastructure.** ODD Studio and ruflo memory handle all of that.
+**The domain expert never re-briefs the AI, tracks state manually, writes handover notes, or identifies shared infrastructure.** ODD Studio and odd-flow memory handle all of that.
 
 ---
 
@@ -444,7 +447,7 @@ The dependency graph tells you the build order. If you build Outcome 12 before O
 
 When the ODD plan is approved and the build begins, the domain expert's role is clear: verify that what was built is right for real users, and describe failures in plain language.
 
-ODD Studio handles the brief. When the domain expert types `*build`, ODD Studio reads the six-field specification from ruflo memory and briefs the build AI with everything it needs. The domain expert does not paste context, identify contracts, or re-explain the project.
+ODD Studio handles the brief. When the domain expert types `*build`, ODD Studio reads the six-field specification from odd-flow memory and briefs the build AI with everything it needs. The domain expert does not paste context, identify contracts, or re-explain the project.
 
 **What the domain expert does:**
 - Follow the verification checklist as the persona — not as themselves reviewing a screen
